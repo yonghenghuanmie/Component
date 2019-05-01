@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <memory>
 #include <string>
 #include <optional>
@@ -9,16 +10,24 @@
 
 enum class Thread
 {
-	running,block,empty
+	running, block, destroy
 };
 
-class A :public StateMachine<Thread,A>
+class A :public StateMachine<Thread, std::string, A>
 {
 public:
 	A()
 	{
-		Register_Callable("stop", [](A*) {std::cout << "stop" << std::endl; },
-			"destroy",[](A*) {std::cout << "destroy" << std::endl; });
+		Register_Callable(Thread::running, [](A*) {std::cout << "running" << std::endl; },
+			Thread::block, [](A*) {std::cout << "block" << std::endl; },
+			Thread::destroy, [](A*) {std::cout << "destroy" << std::endl; });
+
+		Register_Relation(Thread::running, "to_block", Thread::block,
+			Thread::block, "to_running", Thread::running,
+			Thread::running, "to_destroy", Thread::destroy,
+			Thread::block, "to_destroy", Thread::destroy);
+
+		InitialState(Thread::running);
 	}
 private:
 };
@@ -26,5 +35,11 @@ private:
 int main()
 {
 	A a;
+	std::cout << a.PerformOperation("to_block") << std::endl;
+	std::cout << a.PerformOperation("to_block") << std::endl;
+	std::cout << a.RepeatOperation() << std::endl;
+	std::cout << a.PerformOperation("to_destroy") << std::endl;
+	std::cout << a.PerformOperation("to_running") << std::endl;
+	std::system("pause");
 	return 0;
 }
