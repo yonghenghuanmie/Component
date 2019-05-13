@@ -41,7 +41,15 @@ namespace Astar
 			for (auto&& point : points_list)
 			{
 				if (close.find(point) != close.end())
+				{
+					auto new_weight = current->path_weight + current->GetWeight(point) + point->GetEstimatedDistance(end);
+					if (new_weight < point->path_weight)
+					{
+						point->path_weight = new_weight;
+						point->parent = current;
+					}
 					continue;
+				}
 				if (open.find(point) != open.end())
 				{
 					auto new_weight = current->path_weight + current->GetWeight(point) + point->GetEstimatedDistance(end);

@@ -48,9 +48,9 @@ public:
 
 	int GetEstimatedDistance(const Point_ptr<int> & other)override
 	{
-		//Test* t = dynamic_cast<Test*>(other.get());
-		//return std::abs(line - t->line) + std::abs(column - t->column);
-		return 0;
+		Test* t = dynamic_cast<Test*>(other.get());
+		return std::abs(line - t->line) + std::abs(column - t->column);
+		//return 0;
 	}
 
 	int GetWeight(const Point_ptr<int> & other)override
