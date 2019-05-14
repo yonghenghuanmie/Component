@@ -15,8 +15,14 @@ namespace Astar
 		virtual std::vector<Point_ptr<Distance>> GetSurroundPoint() = 0;
 		virtual Distance GetEstimatedDistance(const Point_ptr<Distance>& other) = 0;
 		virtual Distance GetWeight(const Point_ptr<Distance>& other) = 0;
+		bool operator<(const Point_ptr<Distance>& other)
+		{
+			if (path_weight < other->path_weight)
+				return true;
+			return false;
+		}
 
-		std::weak_ptr< Point<Distance>> parent;
+		std::weak_ptr<Point<Distance>> parent;
 		Distance path_weight;
 	};
 
@@ -24,13 +30,16 @@ namespace Astar
 	std::list<Point_ptr<Distance>> FindPath(Point_ptr<Distance> start, Point_ptr<Distance> end)
 	{
 		std::unordered_set<Point_ptr<Distance>> open, close;
+#ifdef DEBUG
+		int close_count = 0;
+#endif // DEBUG
 		start->path_weight = start->GetWeight(start);
 		open.emplace(start);
 		do
 		{
 			if (open.empty())
 				return{};
-			auto iterator = std::min_element(open.begin(), open.end());
+			auto iterator = std::min_element(open.begin(), open.end(), std::mem_fn(&Point<Distance>::operator <));
 			assert(iterator != open.end());
 			auto current = *iterator;
 			open.erase(iterator);
@@ -67,6 +76,9 @@ namespace Astar
 				}
 			}
 			close.emplace(current);
+#ifdef DEBUG
+			++close_count;
+#endif // DEBUG
 		} while (true);
 
 		std::list<Point_ptr<Distance>> list;
@@ -75,6 +87,9 @@ namespace Astar
 			list.emplace_front(ptr);
 		if (list.front() != start)
 			return{};
+#ifdef DEBUG
+		std::cout << close_count << std::endl;
+#endif // DEBUG
 		return list;
 	}
 
