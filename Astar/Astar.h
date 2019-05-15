@@ -14,7 +14,7 @@ namespace Astar
 		virtual ~Point() {}
 		virtual std::vector<Point_ptr<Distance>> GetSurroundPoint() = 0;
 		virtual Distance GetEstimatedDistance(const Point_ptr<Distance>& other) = 0;
-		virtual Distance GetWeight(const Point_ptr<Distance>& other) = 0;
+		virtual Distance GetDistanceWithWeight() = 0;
 		bool operator<(const Point_ptr<Distance>& other)
 		{
 			if (path_weight < other->path_weight)
@@ -33,7 +33,7 @@ namespace Astar
 #ifdef DEBUG
 		int close_count = 0;
 #endif // DEBUG
-		start->path_weight = start->GetWeight(start);
+		start->path_weight = 0;
 		open.emplace(start);
 		do
 		{
@@ -51,7 +51,7 @@ namespace Astar
 			{
 				if (close.find(point) != close.end())
 				{
-					auto new_weight = current->path_weight + current->GetWeight(point) + point->GetEstimatedDistance(end);
+					auto new_weight = current->path_weight + point->GetDistanceWithWeight() + point->GetEstimatedDistance(end);
 					if (new_weight < point->path_weight)
 					{
 						point->path_weight = new_weight;
@@ -61,7 +61,7 @@ namespace Astar
 				}
 				if (open.find(point) != open.end())
 				{
-					auto new_weight = current->path_weight + current->GetWeight(point) + point->GetEstimatedDistance(end);
+					auto new_weight = current->path_weight + point->GetDistanceWithWeight() + point->GetEstimatedDistance(end);
 					if (new_weight < point->path_weight)
 					{
 						point->path_weight = new_weight;
@@ -70,7 +70,7 @@ namespace Astar
 				}
 				else
 				{
-					point->path_weight += current->path_weight + current->GetWeight(point) + point->GetEstimatedDistance(end);
+					point->path_weight += current->path_weight + point->GetDistanceWithWeight() + point->GetEstimatedDistance(end);
 					point->parent = current;
 					open.emplace(point);
 				}

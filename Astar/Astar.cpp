@@ -40,14 +40,14 @@ public:
 	std::vector<Point_ptr<Distance>> GetSurroundPoint()override
 	{
 		std::vector<Point_ptr<Distance>> results;
-		if (line - 1 >= 0 && map[line - 1][column] == 0)
-			results.emplace_back(points[line - 1][column]);
 		if (line + 1 < 10 && map[line + 1][column] == 0)
 			results.emplace_back(points[line + 1][column]);
-		if (column - 1 >= 0 && map[line][column - 1] == 0)
-			results.emplace_back(points[line][column - 1]);
 		if (column + 1 < 10 && map[line][column + 1] == 0)
 			results.emplace_back(points[line][column + 1]);
+		if (line - 1 >= 0 && map[line - 1][column] == 0)
+			results.emplace_back(points[line - 1][column]);
+		if (column - 1 >= 0 && map[line][column - 1] == 0)
+			results.emplace_back(points[line][column - 1]);
 		return results;
 	}
 
@@ -58,13 +58,10 @@ public:
 		//return 0;
 	}
 
-	Distance GetWeight(const Point_ptr<Distance> & other)override
+	Distance GetDistanceWithWeight()override
 	{
-		if (other.get() == this)
-			return 0;
-		auto t = dynamic_cast<Test*>(other.get());
 		//heuristic += 0.01;
-		return (map[t->line][t->column] == 0 ? 1 : 2) + heuristic;
+		return (map[line][column] == 0 ? 1 : 2) + heuristic;
 	}
 
 	static Point_ptr<Distance> points[10][10];
