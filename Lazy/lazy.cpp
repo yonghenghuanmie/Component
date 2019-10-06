@@ -23,12 +23,15 @@ namespace lazy
 		T value;
 	};
 
+	template<typename T>
+	concept LazyRequired = requires(T t)
+	{
+		std::is_arithmetic_v<T> || std::is_invocable_v<T>;
+	};
+
 	// +
-	template<class T1, class T2, bool IsArithmetic1 = std::is_arithmetic_v<T1>, bool IsArithmetic2 = std::is_arithmetic_v<T2>,
-		class Enable = std::enable_if_t<
-		(std::is_arithmetic_v<T1> || std::is_invocable_v<T1>) &&
-		(std::is_arithmetic_v<T2> || std::is_invocable_v<T2>) >>
-		auto operator+(const Value<T1> & value1, const T2 & value2)
+	template<LazyRequired T1, LazyRequired T2, bool IsArithmetic1 = std::is_arithmetic_v<T1>, bool IsArithmetic2 = std::is_arithmetic_v<T2>>
+	auto operator+(const Value<T1>& value1, const T2& value2)
 	{
 		if constexpr (IsArithmetic1)
 		{
@@ -55,11 +58,8 @@ namespace lazy
 	}
 
 	// -
-	template<class T1, class T2, bool IsArithmetic1 = std::is_arithmetic_v<T1>, bool IsArithmetic2 = std::is_arithmetic_v<T2>,
-		class Enable = std::enable_if_t<
-		(std::is_arithmetic_v<T1> || std::is_invocable_v<T1>) &&
-		(std::is_arithmetic_v<T2> || std::is_invocable_v<T2>) >>
-		auto operator-(const Value<T1> & value1, const T2 & value2)
+	template<LazyRequired T1, LazyRequired T2, bool IsArithmetic1 = std::is_arithmetic_v<T1>, bool IsArithmetic2 = std::is_arithmetic_v<T2>>
+	auto operator-(const Value<T1>& value1, const T2& value2)
 	{
 		if constexpr (IsArithmetic1)
 		{
@@ -86,21 +86,18 @@ namespace lazy
 	}
 
 	// *
-	template<class T1, class T2, bool IsArithmetic1 = std::is_arithmetic_v<T1>, bool IsArithmetic2 = std::is_arithmetic_v<T2>,
-		class Enable = std::enable_if_t<
-		(std::is_arithmetic_v<T1> || std::is_invocable_v<T1>) &&
-		(std::is_arithmetic_v<T2> || std::is_invocable_v<T2>) >>
-		auto operator*(const Value<T1> & value1, const T2 & value2)
+	template<LazyRequired T1, LazyRequired T2, bool IsArithmetic1 = std::is_arithmetic_v<T1>, bool IsArithmetic2 = std::is_arithmetic_v<T2>>
+	auto operator*(const Value<T1>& value1, const T2& value2)
 	{
 		if constexpr (IsArithmetic1)
 		{
 			if constexpr (IsArithmetic2)
 			{
-				return Value([&]() {return static_cast<T1>(value1) * value2; });
+				return Value([&]() {return static_cast<T1>(value1)* value2; });
 			}
 			else
 			{
-				return Value([&]() {return value1 == 0 ? 0 : static_cast<T1>(value1) * value2(); });
+				return Value([&]() {return value1 == 0 ? 0 : static_cast<T1>(value1)* value2(); });
 			}
 		}
 		else
@@ -117,11 +114,8 @@ namespace lazy
 	}
 
 	// /
-	template<class T1, class T2, bool IsArithmetic1 = std::is_arithmetic_v<T1>, bool IsArithmetic2 = std::is_arithmetic_v<T2>,
-		class Enable = std::enable_if_t<
-		(std::is_arithmetic_v<T1> || std::is_invocable_v<T1>) &&
-		(std::is_arithmetic_v<T2> || std::is_invocable_v<T2>) >>
-		auto operator/(const Value<T1> & value1, const T2 & value2)
+	template<LazyRequired T1, LazyRequired T2, bool IsArithmetic1 = std::is_arithmetic_v<T1>, bool IsArithmetic2 = std::is_arithmetic_v<T2>>
+	auto operator/(const Value<T1>& value1, const T2& value2)
 	{
 		if constexpr (IsArithmetic1)
 		{
@@ -147,11 +141,8 @@ namespace lazy
 		}
 	}
 
-	template<class T1, class T2, bool IsArithmetic1 = std::is_arithmetic_v<T1>, bool IsArithmetic2 = std::is_arithmetic_v<T2>,
-		class Enable = std::enable_if_t<
-		(std::is_arithmetic_v<T1> || std::is_invocable_v<T1>) &&
-		(std::is_arithmetic_v<T2> || std::is_invocable_v<T2>) >>
-		auto pow(const T1 & base, const T2 & index)
+	template<LazyRequired T1, LazyRequired T2, bool IsArithmetic1 = std::is_arithmetic_v<T1>, bool IsArithmetic2 = std::is_arithmetic_v<T2>>
+	auto pow(const T1& base, const T2& index)
 	{
 		if constexpr (IsArithmetic1)
 		{
