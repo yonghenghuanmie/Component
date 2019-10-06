@@ -13,7 +13,7 @@ namespace lazy
 	public:
 		Value(const T& v) :value(v) {}
 
-		template<class Enable = std::enable_if_t<!std::is_invocable_v<T>>>
+		template<class Enable = std::enable_if_t<std::is_arithmetic_v<T>>>
 		/*explicit*/ operator T() const { return value; }
 
 		template<class Enable = std::enable_if_t<std::is_invocable_v<T>>>
