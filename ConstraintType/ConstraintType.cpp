@@ -21,14 +21,21 @@ namespace ConstraintType
 {
 	ConstructBasicEligibleType(BasicEligibleType, Byte, Short, Integer, Long);
 
+	//[1]
 	AddTypeLayer(1, std::list);
 	AddTypeLayer(1, std::deque);
 	AddTypeLayer(1, std::vector);
 	AddTypeLayer(1, std::forward_list);
-	Construct1LayerEligibleType(EligibleType1, Byte, Short, Integer, Long);
+	Construct1LayerEligibleType(EligibleType1, 1, Byte, Short, Integer, Long);
 
+	//[2,1]
 	AddTypeLayer(2, std::set);
-	Construct2LayerEligibleType(EligibleType2, Byte, Short, Integer, Long);
+	Construct2LayerEligibleType(EligibleType2, 2, Byte, Short, Integer, Long);
+
+	//Use different layer to avoid collision.[11,10]
+	AddTypeLayer(10, std::vector);
+	AddTypeLayer(11, std::vector);
+	Construct2LayerEligibleType(EligibleType3, 11, Byte, Short, Integer, Long);
 }
 
 class A
@@ -48,6 +55,9 @@ public:
 
 	template<ConstraintType::EligibleType2 T>
 	static void TestEligibleType2(const T& c) {}
+
+	template<ConstraintType::EligibleType3 T>
+	static void TestEligibleType3(const T& c) {}
 };
 
 int main()
@@ -63,5 +73,7 @@ int main()
 	//A::TestEligibleType2(std::set<std::set<Integer>>());				//Wrong: std::set not in layer1's eligible type set
 	//A::TestEligibleType2(std::set<std::vector<int>>());				//Wrong: int not in basic eligible type set.
 	A::TestEligibleType2(std::set<std::vector<Integer>>());				//OK
+
+	A::TestEligibleType3(std::vector<std::vector<Short>>());			//OK
 	return 0;
 }
