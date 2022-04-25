@@ -2,16 +2,20 @@
 
 class elapse
 {
-	auto now() { return std::chrono::system_clock().now(); }
 public:
 	elapse()
 	{
-		begin = now();
+		begin = std::chrono::system_clock().now();
 	}
 
-	elapse(std::function<void(std::chrono::system_clock::duration)> function) :function(function)
+	elapse(std::function<void(std::chrono::system_clock::duration)> function) :elapse()
 	{
-		begin = now();
+		this->function = std::move(function);
+	}
+
+	void restart() noexcept
+	{
+		begin = std::chrono::system_clock().now();
 	}
 
 	~elapse()

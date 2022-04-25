@@ -18,9 +18,9 @@ class A :public StateMachine<Thread, std::string, A>
 public:
 	A()
 	{
-		Register_Callable(Thread::running, [](A*) {std::cout << "running" << std::endl; },
-			Thread::block, [](A*) {std::cout << "block" << std::endl; },
-			Thread::destroy, [](A*) {std::cout << "destroy" << std::endl; });
+		Register_Callable(Thread::running, [](A*) {std::cout << "running" << std::endl; return true; },
+			Thread::block, [](A*) {std::cout << "block" << std::endl; return true; },
+			Thread::destroy, [](A*) {std::cout << "destroy" << std::endl; return true; });
 
 		Register_Relation(Thread::running, "to_block", Thread::block,
 			Thread::block, "to_running", Thread::running,
