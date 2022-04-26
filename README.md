@@ -3,7 +3,8 @@
 ### Overview
 ConstraintType is a header library to constraint type in template parameters based on concept. It is useful and convenient for generic programming.  
 ### Usage
-`using namespace ConstraintType;
+```
+using namespace ConstraintType;
 
 ConstructBasicEligibleType(BasicEligibleType, char, short, int, long long);
 
@@ -29,5 +30,6 @@ int main()
 	TestEligibleType(std::vector<double>());	//Error
 	TestEligibleType(std::vector<int>());		//OK
 	return 0;
-}`  
+}
+```  
 For more usage and more powerful functionalities you can see https://github.com/yonghenghuanmie/Component/blob/master/ConstraintType/ConstraintType.cpp.
