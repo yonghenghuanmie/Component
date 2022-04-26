@@ -18,7 +18,7 @@ AddTypeLayer(1, std::forward_list);
 Construct1LayerEligibleType(EligibleType1, 1, char, short, int, long long);
 
 template<EligibleType1 T>
-static void TestEligibleType(const T& c) {}
+void TestEligibleType(const T& c) {}
 
 
 int main()
