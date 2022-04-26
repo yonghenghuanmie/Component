@@ -23,10 +23,10 @@ static void TestEligibleType(const T& c) {}
 
 int main()
 {
-	TestBasicEligibleType(1.0);					//Error
-	TestBasicEligibleType(1);					//OK
+	TestBasicEligibleType(1.0);			//Error
+	TestBasicEligibleType(1);			//OK
 
-	TestEligibleType(std::set<int>());			//Error
+	TestEligibleType(std::set<int>());		//Error
 	TestEligibleType(std::vector<double>());	//Error
 	TestEligibleType(std::vector<int>());		//OK
 	return 0;
