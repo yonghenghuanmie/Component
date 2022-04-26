@@ -9,6 +9,11 @@ public:
 		return state;
 	}
 
+	auto GetNextState() noexcept
+	{
+		return next_state;
+	}
+
 	bool PerformOperation(const Operation& operation)
 	{
 		if ((bool)state == false)
@@ -87,11 +92,6 @@ protected:
 		state = s;
 		callable_map[s](derive);
 		return true;
-	}
-
-	auto GetNextState() noexcept
-	{
-		return next_state;
 	}
 
 private:
