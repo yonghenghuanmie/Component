@@ -1,7 +1,7 @@
 # Component
 ## ConstraintType
 ### Overview
-ConstraintType is a header library to constraint type in template parameters based on concept. It is useful and convenient for generic programming.  
+ConstraintType is a header library to constraint type in template parameters. It is useful and convenient for generic programming and provide backward compatibility from C++ 14 to C++ 20. When you use C++ 20 or greater standards it will use concept instead of constant expression.  
 ### Usage
 ```c++
 using namespace ConstraintType;
@@ -32,4 +32,4 @@ int main()
 	return 0;
 }
 ```  
-For more usage and more powerful functionalities you can see https://github.com/yonghenghuanmie/Component/blob/master/ConstraintType/ConstraintType.cpp.
+For more usage and more powerful functionalities you can see `ConstraintType/ConstraintType.cpp` for concept or `ConstraintType/ConstraintTypeBackwardCompatibility.cpp` for legacy.  
