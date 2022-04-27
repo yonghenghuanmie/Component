@@ -1,18 +1,17 @@
 /*
 *	@author huanmie<yonghenghuanmie@gmail.com>
-*	@date 2022.4.26
+*	@date 2022.4.28
 */
 
 
-#if __cplusplus >= 202002L
+#if __cplusplus < 202002L
 
-// Don't forget <tuple> and <concept>
+// Don't forget <tuple>
 #include <set>
 #include <list>
 #include <tuple>
 #include <deque>
 #include <vector>
-#include <concepts>
 #include <iostream>
 #include <forward_list>
 #include "ConstraintType.h"
@@ -71,10 +70,10 @@ namespace ConstraintType
 class Test
 {
 public:
-	template<ConstraintType::BasicEligibleType T>
+	template<typename T, typename Allow = std::enable_if_t<ConstraintType::BasicEligibleType<T>>>
 	static void TestBasicEligibleType(const T& c) {}
 
-	template<ConstraintType::EligibleType1 T>
+	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleType1<T>>>
 	static void TestEligibleType1(const T& c)
 	{
 		for (auto&& i : c)
@@ -83,20 +82,20 @@ public:
 		}
 	}
 
-	template<ConstraintType::EligibleType2 T>
+	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleType2<T>>>
 	static void TestEligibleType2(const T& c) {}
 
-	template<ConstraintType::EligibleType3 T>
+	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleType3<T>>>
 	static void TestEligibleType3(const T& c) {}
 
-	template<ConstraintType::EligibleType4 T>
+	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleType4<T>>>
 	static void TestEligibleType4(const T& c) {}
 
-	template<ConstraintType::EligibleType5 T>
+	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleType5<T>>>
 	static void TestEligibleType5(const T& c) {}
 
 	// B<A<?,Long>,int>
-	template<typename T> requires ConstraintType::EligibleType5<T>&& ConstraintType::EligibleType6<T>
+	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleType5<T>&& ConstraintType::EligibleType6<T>>>
 	static void TestCombinedEligibleType(const T& c) {}
 };
 
@@ -134,4 +133,4 @@ int main()
 	return 0;
 }
 
-#endif // __cplusplus >= 202002L
+#endif // __cplusplus < 202002L
