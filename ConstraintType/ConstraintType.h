@@ -8,19 +8,19 @@
 namespace ConstraintType
 {
 	// check if concept available.
-#define BackwardCompatibility
+#define _BackwardCompatibility
 #if __cplusplus >= 202002L
 #ifdef __cpp_concepts
 #ifdef __cpp_lib_concepts
 
-#undef BackwardCompatibility
+#undef _BackwardCompatibility
 
 #endif // __cpp_lib_concepts
 #endif // __cpp_concepts
 #endif // __cplusplus >= 202002L
 
 
-#ifdef BackwardCompatibility
+#ifdef _BackwardCompatibility
 
 #if __cplusplus < 201402L
 #error "Only compilers that implement standards greater than C++14 are supported!"
@@ -51,7 +51,7 @@ namespace ConstraintType
 	template<typename T, typename... Rest>
 	Concept _EligibleUnderlyingType = (std::same_as<T, Rest> || ...);
 
-#endif // BackwardCompatibility
+#endif // _BackwardCompatibility
 
 
 	using _Layer = std::size_t;
@@ -112,18 +112,23 @@ namespace ConstraintType
 	_GetUnderlyingType(StartLayer-TotalLayer+1,_If(_IsZero(_Decrease1(TotalLayer)),T,_obstruct(_ConstructGetUnderlyingTypeIndirect)()(_Decrease1(TotalLayer),StartLayer,T)))
 #define _ConstructGetUnderlyingTypeIndirect() _ConstructGetUnderlyingType
 
-#define _ConstructGetUnderlyingTypeWithPosition(TotalLayer,StartLayer,T,...)					\
+#define _ConstructGetUnderlyingTypeWithPosition(TotalLayer,StartLayer,T,...)							\
 	_GetUnderlyingTypeWithPosition(StartLayer-TotalLayer+1,_If(_IsZero(_Decrease1(TotalLayer)),T,_obstruct(_ConstructGetUnderlyingTypeWithPositionIndirect)()(_Decrease1(TotalLayer),StartLayer,T,##__VA_ARGS__)),_GetNthElement(_Decrease1(TotalLayer),##__VA_ARGS__))
 #define _ConstructGetUnderlyingTypeWithPositionIndirect() _ConstructGetUnderlyingTypeWithPosition
 
 
-
-
+	/// @notice For single dimension type you can directly use this. Like int, std::thread.
+	/// @param Name is name of either concept for newer version or constant expression for older version which you defined.
+	/// @param ... is a type list to constraint type.
 #define ConstructBasicEligibleType(Name,...)															\
 	template<typename T>																				\
 	Concept Name = _EligibleUnderlyingType<T,##__VA_ARGS__>;
 
-	// Specialize _IsEligibleType
+	/// @notice For multi-dimension type you need to AddTypeLayer first then ConstructEligibleType,
+	/// they are methods without specify the index of this type.
+	/// If you look for methods which can specify index then go look WithPosition version.
+	/// @param LayerNumber is which layer you want to add.
+	/// @param Type is which type add to the layer.
 #define AddTypeLayer(LayerNumber,Type)																	\
 	template<typename T>																				\
 	struct _IsEligibleType<Type<T>,LayerNumber,default_index> :std::true_type							\
@@ -131,12 +136,28 @@ namespace ConstraintType
 		using underlying_type = T;																		\
 	};
 
+	/// @notice For multi-dimension type you need to AddTypeLayer first then ConstructEligibleType,
+	/// they are methods without specify the index of this type.
+	/// If you look for methods which can specify index then go look WithPosition version.
+	/// @param Name is name of either concept for newer version or constant expression for older version which you defined.
+	/// @param TotalLayer is total layer you want to use.
+	/// @param StartLayer is start for which layer, you should add type to the correspond layer first.
+	/// e.g If TotalLayer is 2 and StartLayer is 10, then it will use 10,9. So you should call AddTypeLayer first.
+	/// @param ... this rest of parameters are list of basic type, which equivalent to ConstructBasicEligibleType.
+	/// 
+	/// e.g If you want to constraint type to std::vector<int> then TotalLayer should be 1, StartLayer should
+	/// be the same layer you called AddTypeLayer with Type std::vector and the rest of parameter is int.
 #define ConstructEligibleType(Name,TotalLayer,StartLayer,...)											\
 	template<typename T>																				\
 	Concept Name = _EligibleUnderlyingType<_eval(_ConstructGetUnderlyingType(TotalLayer,StartLayer,T)),##__VA_ARGS__>;
 
 
-	// Specialize _IsEligibleType
+	/// @notice For multi-dimension type you need to AddTypeLayerWithPosition first then ConstructEligibleTypeWithPosition.
+	/// @param LayerNumber is which layer you want to add.
+	/// @param TypeIndex is the index you specified for the Type. The AddTypeLayer's default TypeIndex is 0
+	/// which means they always constraint the first parameter in template parameter list.
+	/// e.g You want to constraint T2 in A<T1,T2> you can't do that without WithPosition version. 
+	/// @param Type is which type add to the layer.
 #define AddTypeLayerWithPosition(LayerNumber,TypeIndex,Type)											\
 	template<typename... Rest>																			\
 	struct _IsEligibleType<Type<Rest...>,LayerNumber,TypeIndex> :std::true_type							\
@@ -144,7 +165,20 @@ namespace ConstraintType
 		using underlying_type = std::tuple_element_t<TypeIndex,std::tuple<Rest...>>;					\
 	};
 
-	// ... include TypeIndex and BasicEligibleType
+	/// @notice For multi-dimension type you need to AddTypeLayerWithPosition first then ConstructEligibleTypeWithPosition.
+	/// @param Name is name of either concept for newer version or constant expression for older version which you defined.
+	/// @param TotalLayer is total layer you want to use.
+	/// @param StartLayer is start for which layer, you should add type to the correspond layer first.
+	/// e.g If TotalLayer is 2 and StartLayer is 10, then it will use 10,9. So you should call AddTypeLayerWithPosition first.
+	/// @param ... the first n element are TypeIndex, n equal to the TotalLayer.
+	/// TypeIndex is the index you specified for the Type. The ConstructEligibleType's default TypeIndex is 0
+	/// which means they always constraint the first parameter in template parameter list.
+	/// e.g You want to constraint T2 in A<T1,T2> you can't do that without WithPosition version. 
+	/// The rest of parameters are list of basic type, which equivalent to ConstructBasicEligibleType.
+	/// 
+	/// e.g If you want to constraint type to A<?,int> then TotalLayer should be 1,
+	/// first element of ... is the same you specified in AddTypeLayerWithPosition's TypeIndex equals 1,
+	/// StartLayer should be the same layer you called AddTypeLayerWithPosition with Type A and the rest of parameter is int.
 #define ConstructEligibleTypeWithPosition(Name,TotalLayer,StartLayer,...)								\
 	template<typename T>																				\
 	Concept Name = _EligibleUnderlyingType<_eval(_ConstructGetUnderlyingTypeWithPosition(TotalLayer,StartLayer,T,##__VA_ARGS__)),_eval(_GetBeginFrom(TotalLayer,##__VA_ARGS__))>;
