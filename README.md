@@ -15,7 +15,7 @@ AddTypeLayer(1, std::list);
 AddTypeLayer(1, std::deque);
 AddTypeLayer(1, std::vector);
 AddTypeLayer(1, std::forward_list);
-Construct1LayerEligibleType(EligibleType1, 1, char, short, int, long long);
+ConstructEligibleType(EligibleType1, 1, 1, char, short, int, long long);
 
 template<EligibleType1 T>
 void TestEligibleType(const T& c) {}
