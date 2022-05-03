@@ -57,7 +57,13 @@ namespace ConstraintType
 	using _Layer = std::size_t;
 	using _Index = std::size_t;
 	template<typename T, _Layer layer, _Index index>
-	struct _IsEligibleType :std::false_type {};
+	struct ErrorData;
+	template<typename T, _Layer layer, _Index index>
+	struct _IsEligibleType :std::false_type
+	{
+		// ErrorData will provide template parameter data when it goes wrong.
+		constexpr static ErrorData<T, layer, index> _;
+	};
 
 	constexpr std::size_t default_index = 0;
 #define _GetUnderlyingType(LayerNumber,CurrentType)														\
@@ -109,11 +115,13 @@ namespace ConstraintType
 #define _GetNthElement(n,...) _GetFirst(_GetBeginFrom(n,##__VA_ARGS__))
 
 #define _ConstructGetUnderlyingType(TotalLayer,StartLayer,T)											\
-	_GetUnderlyingType(StartLayer-TotalLayer+1,_If(_IsZero(_Decrease1(TotalLayer)),T,_obstruct(_ConstructGetUnderlyingTypeIndirect)()(_Decrease1(TotalLayer),StartLayer,T)))
+	_GetUnderlyingType(StartLayer-TotalLayer+1,_If(_IsZero(_Decrease1(TotalLayer)),T,					\
+	_obstruct(_ConstructGetUnderlyingTypeIndirect)()(_Decrease1(TotalLayer),StartLayer,T)))
 #define _ConstructGetUnderlyingTypeIndirect() _ConstructGetUnderlyingType
 
 #define _ConstructGetUnderlyingTypeWithPosition(TotalLayer,StartLayer,T,...)							\
-	_GetUnderlyingTypeWithPosition(StartLayer-TotalLayer+1,_If(_IsZero(_Decrease1(TotalLayer)),T,_obstruct(_ConstructGetUnderlyingTypeWithPositionIndirect)()(_Decrease1(TotalLayer),StartLayer,T,##__VA_ARGS__)),_GetNthElement(_Decrease1(TotalLayer),##__VA_ARGS__))
+	_GetUnderlyingTypeWithPosition(StartLayer-TotalLayer+1,_If(_IsZero(_Decrease1(TotalLayer)),T,		\
+	_obstruct(_ConstructGetUnderlyingTypeWithPositionIndirect)()(_Decrease1(TotalLayer),StartLayer,T,##__VA_ARGS__)),_GetNthElement(_Decrease1(TotalLayer),##__VA_ARGS__))
 #define _ConstructGetUnderlyingTypeWithPositionIndirect() _ConstructGetUnderlyingTypeWithPosition
 
 
