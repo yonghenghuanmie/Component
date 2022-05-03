@@ -44,8 +44,6 @@ namespace ConstraintType
 	// Layer:[2,1]. Use common layer with EligibleType1.
 	// For example: std::set<std::vector<Integer>>
 	ConstructEligibleType(EligibleType2, 2, 2, Byte, Short, Integer, Long);
-	//_ConstructGetUnderlyingType(1, 2, int);
-	//_ConstructGetUnderlyingType(2, 2, int);
 
 	// Layer:[11,10]. Use different layer to avoid collision.
 	AddTypeLayer(10, std::vector);
@@ -63,6 +61,7 @@ namespace ConstraintType
 	// So, arguments are 0x11,0,1.
 	// B<A<?,Long>,?>
 	ConstructEligibleTypeWithPosition(EligibleType5, 2, 0x11, 0, 1, Long);
+	// equivalent to
 	//template<typename T>
 	//concept EligibleType5 = _EligibleUnderlyingType<std::enable_if_t<_IsEligibleType<std::enable_if_t<_IsEligibleType<T, 0x11 - 1 + 1, 0>::value, typename _IsEligibleType<T, 0x11 - 1 + 1, 0>::underlying_type>, 0x11 - 2 + 1, 1>::value, typename _IsEligibleType<std::enable_if_t<_IsEligibleType<T, 0x11 - 1 + 1, 0>::value, typename _IsEligibleType<T, 0x11 - 1 + 1, 0>::underlying_type>, 0x11 - 2 + 1, 1>::underlying_type>, Long>;;
 
