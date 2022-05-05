@@ -32,6 +32,7 @@
 *.app
 
 .vs
+.vscode
 x86
 x64
 Debug

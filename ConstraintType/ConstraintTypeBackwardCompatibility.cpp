@@ -65,6 +65,11 @@ namespace ConstraintType
 	// B<?,int>
 	// You can combine EligibleType5 and EligibleType6 to construct more complicated constraints.
 	ConstructEligibleTypeWithPosition(EligibleType6, 1, 0x11, 1, int);
+
+	// Ignore the upper layer just focus on underlying type.
+	// ?<Byte||Short||Integer||Long>
+	AddTypeLayer(0x20, Any);
+	ConstructEligibleType(EligibleType7, 1, 0x20, Byte, Short, Integer, Long);
 }
 
 class Test
@@ -97,6 +102,9 @@ public:
 	// B<A<?,Long>,int>
 	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleType5<T>&& ConstraintType::EligibleType6<T>>>
 	static void TestCombinedEligibleType(const T& c) {}
+
+	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleType7<T>>>
+	static void TestEligibleType7(const T& c) {}
 };
 
 int main()
@@ -130,6 +138,11 @@ int main()
 	//Test::TestCombinedEligibleType(B<A<int, Long>, double>());		// Error: double doesn't meet EligibleType6's requirements(int)
 	//Test::TestCombinedEligibleType(B<A<int, double>, int>());			// Error: double doesn't meet EligibleType5's requirements(Long)
 	Test::TestCombinedEligibleType(B<A<int, Long>, int>());				// OK
+
+	// ?<Byte||Short||Integer||Long>
+	//Test::TestEligibleType7(std::vector<int>());						// Error: int not in basic eligible type set.
+	Test::TestEligibleType7(std::vector<Long>());						// OK. Any
+	Test::TestEligibleType7(A<Long, Byte>());							// OK. Any
 	return 0;
 }
 

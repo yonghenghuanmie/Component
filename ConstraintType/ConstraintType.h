@@ -57,13 +57,31 @@ namespace ConstraintType
 	using _Layer = std::size_t;
 	using _Index = std::size_t;
 	template<typename T, _Layer layer, _Index index>
-	struct ErrorData;
+	struct _IsEligibleType;
+	template<typename... T> struct Any;
+
 	template<typename T, _Layer layer, _Index index>
-	struct _IsEligibleType :std::false_type
+	struct ErrorData;
+
+	template<typename T, _Layer layer, _Index index>
+	struct _NotEligible :std::false_type
 	{
 		// ErrorData will provide template parameter data when it goes wrong.
 		constexpr static ErrorData<T, layer, index> _;
 	};
+
+	template<typename T, _Layer layer, _Index index>
+	struct _IsAny :_NotEligible <T, layer, index> {};
+
+	template<template<typename...> typename T, _Layer layer, _Index index, typename... Rest>
+	struct _IsAny<T<Rest...>, layer, index> :std::conditional_t<_IsEligibleType<Any<Rest...>, layer, index>::value, std::true_type, _NotEligible<T<Rest...>, layer, index>>
+	{
+		using underlying_type = std::tuple_element_t<index, std::tuple<Rest...>>;
+	};
+
+	template<typename T, _Layer layer, _Index index>
+	struct _IsEligibleType :_IsAny<T, layer, index> {};
+
 
 	constexpr std::size_t default_index = 0;
 #define _GetUnderlyingType(LayerNumber,CurrentType)														\
@@ -125,6 +143,10 @@ namespace ConstraintType
 #define _ConstructGetUnderlyingTypeWithPositionIndirect() _ConstructGetUnderlyingTypeWithPosition
 
 
+	/// @notice Any is used to skip current type constraint. Only for intermediate layer use(means except for underlying type check).
+	template<typename... T>
+	struct Any {};
+
 	/// @notice For single dimension type you can directly use this. Like int, std::thread.
 	/// @param Name is name of either concept for newer version or constant expression for older version which you defined.
 	/// @param ... is a type list to constraint type.
@@ -138,10 +160,10 @@ namespace ConstraintType
 	/// @param LayerNumber is which layer you want to add.
 	/// @param Type is which type add to the layer.
 #define AddTypeLayer(LayerNumber,Type)																	\
-	template<typename T>																				\
-	struct _IsEligibleType<Type<T>,LayerNumber,default_index> :std::true_type							\
+	template<typename... Rest>																			\
+	struct _IsEligibleType<Type<Rest...>,LayerNumber,default_index> :std::true_type						\
 	{																									\
-		using underlying_type = T;																		\
+		using underlying_type = std::tuple_element_t<default_index,std::tuple<Rest...>>;				\
 	};
 
 	/// @notice For multi-dimension type you need to AddTypeLayer first then ConstructEligibleType,
