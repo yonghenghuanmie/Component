@@ -77,6 +77,11 @@ namespace ConstraintType
 	AddTypeLayer(0x20, Any);
 	ConstructEligibleType(EligibleType7, 1, 0x20, Byte, Short, Integer, Long);
 
+	// Ignore the underlying type just focus on upper layer.
+	// std::vector<?>
+	AddTypeLayer(0x21, std::vector);
+	ConstructEligibleType(EligibleType8, 1, 0x21, Any<void>);
+
 	// (5,10)
 	ConstructBasicEligibleValue(EligibleValue1, std::pair{ std::greater{}, 5 }, std::pair{ std::less{}, 10 });
 
@@ -115,6 +120,9 @@ public:
 
 	template<ConstraintType::EligibleType7 T>
 	static void TestEligibleType7(const T& c) {}
+
+	template<ConstraintType::EligibleType8 T>
+	static void TestEligibleType8(const T& c) {}
 
 	template<auto V, typename T = std::enable_if_t<ConstraintType::EligibleValue1<V>>>
 	static void TestEligibleValue1() {}
@@ -156,6 +164,10 @@ int main()
 	//Test::TestEligibleType7(std::vector<int>());						// Error: int not in basic eligible type set.
 	Test::TestEligibleType7(std::vector<Long>());						// OK. Any
 	Test::TestEligibleType7(A<Long, int>());							// OK. Any
+
+	// std::vector<?>
+	//Test::TestEligibleType8(std::list<int>());						// Error: double doesn't meet EligibleType6's requirements(std::vector)
+	Test::TestEligibleType8(std::vector<int>());						// OK. Any
 
 	// (5,10)
 	//Test::TestEligibleValue1<4>();									// Error: 4 less than 5

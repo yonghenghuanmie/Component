@@ -20,6 +20,8 @@ namespace ConstraintType
 #endif // __cplusplus >= 202002L
 
 
+	template<typename... T> struct Any;
+
 #ifdef _BackwardCompatibility
 
 #if __cplusplus < 201402L
@@ -47,15 +49,16 @@ namespace ConstraintType
 
 #define Concept constexpr bool
 	template<typename T, typename... Rest>
-	Concept _EligibleUnderlyingType = disjunction_v<std::is_same<T, Rest>...>;
+	Concept _EligibleUnderlyingType = disjunction_v<std::is_same<T, Rest>...> || disjunction_v<std::is_same<Any<void>, Rest>...>;
 
 #else
 
 #define Concept concept
 	template<typename T, typename... Rest>
-	Concept _EligibleUnderlyingType = (std::same_as<T, Rest> || ...);
+	Concept _EligibleUnderlyingType = ((std::same_as<T, Rest> || std::same_as<Any<void>, Rest>) || ...);
 
 #endif // _BackwardCompatibility
+
 
 #if __cplusplus >= 201703L
 
@@ -91,7 +94,6 @@ namespace ConstraintType
 	using _Index = std::size_t;
 	template<typename T, _Layer layer, _Index index>
 	struct _IsEligibleType;
-	template<typename... T> struct Any;
 
 	template<typename T, _Layer layer, _Index index>
 	struct ErrorType;
@@ -179,6 +181,10 @@ namespace ConstraintType
 	/// @notice Any is used to skip current type constraint. Only for intermediate layer use(means except for underlying type check).
 	template<typename... T>
 	struct Any {};
+
+	/// @notice Any<void> is used to skip underlying type constraint.
+	template<>
+	struct Any<void> {};
 
 	/// @notice For single dimension type you can directly use this. Like int, std::thread.
 	/// @param Name is name of either concept for newer version or constant expression for older version which you defined.
