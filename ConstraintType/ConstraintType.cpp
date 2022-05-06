@@ -12,8 +12,10 @@
 #include <tuple>
 #include <deque>
 #include <vector>
+#include <utility>
 #include <concepts>
 #include <iostream>
+#include <functional>
 #include <forward_list>
 #include "ConstraintType.h"
 
@@ -74,6 +76,10 @@ namespace ConstraintType
 	// ?<Byte||Short||Integer||Long>
 	AddTypeLayer(0x20, Any);
 	ConstructEligibleType(EligibleType7, 1, 0x20, Byte, Short, Integer, Long);
+
+	// (5,10)
+	ConstructBasicEligibleValue(EligibleValue1, std::pair{ std::greater{}, 5 }, std::pair{ std::less{}, 10 });
+
 }
 
 class Test
@@ -109,6 +115,9 @@ public:
 
 	template<ConstraintType::EligibleType7 T>
 	static void TestEligibleType7(const T& c) {}
+
+	template<auto V, typename T = std::enable_if_t<ConstraintType::EligibleValue1<V>>>
+	static void TestEligibleValue1() {}
 };
 
 int main()
@@ -146,7 +155,13 @@ int main()
 	// ?<Byte||Short||Integer||Long>
 	//Test::TestEligibleType7(std::vector<int>());						// Error: int not in basic eligible type set.
 	Test::TestEligibleType7(std::vector<Long>());						// OK. Any
-	Test::TestEligibleType7(A<Long, Byte>());							// OK. Any
+	Test::TestEligibleType7(A<Long, int>());							// OK. Any
+
+	// (5,10)
+	//Test::TestEligibleValue1<4>();									// Error: 4 less than 5
+	Test::TestEligibleValue1<8>();										// OK
+
+
 	return 0;
 }
 

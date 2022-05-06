@@ -23,7 +23,9 @@ namespace ConstraintType
 #ifdef _BackwardCompatibility
 
 #if __cplusplus < 201402L
+
 #error "Only compilers that implement standards greater than C++14 are supported!"
+
 #elif __cplusplus < 201703L
 	template<typename... Rest>
 	struct disjunction :std::false_type {};
@@ -38,7 +40,9 @@ namespace ConstraintType
 	constexpr bool disjunction_v = disjunction<Rest...>::value;
 
 #elif __cplusplus < 202002L
+
 	using std::disjunction_v;
+
 #endif // __cplusplus < 201402L
 
 #define Concept constexpr bool
@@ -53,6 +57,35 @@ namespace ConstraintType
 
 #endif // _BackwardCompatibility
 
+#if __cplusplus >= 201703L
+
+	template<auto ValueToBeChecked, typename Operator, auto ValueUserProvided>
+	struct ErrorValue;
+
+	template<auto ValueToBeChecked, typename Operator, auto ValueUserProvided>
+	struct _NotEligibleValue :std::false_type
+	{
+		// ErrorValue will provide template parameter data when it goes wrong.
+		constexpr static ErrorValue<ValueToBeChecked, Operator, ValueUserProvided> _;
+	};
+
+#if __cplusplus < 202002L
+	template<auto ValueToBeChecked, typename Operator, auto ValueUserProvided>
+	struct _IsEligibleValue :std::conditional_t < Operator{}(ValueToBeChecked, ValueUserProvided), std::true_type, _NotEligibleValue<ValueToBeChecked, Operator, ValueUserProvided >> {};
+
+	template<auto ValueToBeChecked, typename Operator, auto ValueUserProvided>
+	constexpr bool _EligibleUnderlyingValue = _IsEligibleValue<ValueToBeChecked, Operator, ValueUserProvided>::value;
+#else
+	template<auto ValueToBeChecked, auto Operator, auto ValueUserProvided>
+	struct _IsEligibleValue :std::conditional_t < Operator(ValueToBeChecked, ValueUserProvided), std::true_type, _NotEligibleValue<ValueToBeChecked, decltype(Operator), ValueUserProvided >> {};
+
+	// Rest must be std::pair
+	template<auto Value, auto... Rest>
+	constexpr bool _EligibleUnderlyingValue = std::conjunction_v<_IsEligibleValue<Value, Rest.first, Rest.second>...>;
+#endif // __cplusplus < 202002L
+
+#endif // __cplusplus >= 201703L
+
 
 	using _Layer = std::size_t;
 	using _Index = std::size_t;
@@ -61,20 +94,20 @@ namespace ConstraintType
 	template<typename... T> struct Any;
 
 	template<typename T, _Layer layer, _Index index>
-	struct ErrorData;
+	struct ErrorType;
 
 	template<typename T, _Layer layer, _Index index>
-	struct _NotEligible :std::false_type
+	struct _NotEligibleType :std::false_type
 	{
-		// ErrorData will provide template parameter data when it goes wrong.
-		constexpr static ErrorData<T, layer, index> _;
+		// ErrorType will provide template parameter data when it goes wrong.
+		constexpr static ErrorType<T, layer, index> _;
 	};
 
 	template<typename T, _Layer layer, _Index index>
-	struct _IsAny :_NotEligible <T, layer, index> {};
+	struct _IsAny :_NotEligibleType <T, layer, index> {};
 
 	template<template<typename...> typename T, _Layer layer, _Index index, typename... Rest>
-	struct _IsAny<T<Rest...>, layer, index> :std::conditional_t<_IsEligibleType<Any<Rest...>, layer, index>::value, std::true_type, _NotEligible<T<Rest...>, layer, index>>
+	struct _IsAny<T<Rest...>, layer, index> :std::conditional_t<_IsEligibleType<Any<Rest...>, layer, index>::value, std::true_type, _NotEligibleType<T<Rest...>, layer, index>>
 	{
 		using underlying_type = std::tuple_element_t<index, std::tuple<Rest...>>;
 	};
@@ -212,4 +245,36 @@ namespace ConstraintType
 #define ConstructEligibleTypeWithPosition(Name,TotalLayer,StartLayer,...)								\
 	template<typename T>																				\
 	Concept Name = _EligibleUnderlyingType<_eval(_ConstructGetUnderlyingTypeWithPosition(TotalLayer,StartLayer,T,##__VA_ARGS__)),_eval(_GetBeginFrom(TotalLayer,##__VA_ARGS__))>;
+
+
+#if __cplusplus >= 201703L
+
+#if __cplusplus < 202002L
+
+	/// @notice For non-type-involving constant expression you can directly use this. Like 8.
+	/// In C++17 you can only impose 1 restrict per a macro call.
+	/// @param Name is name of constant expression which you defined.
+	/// @param Operator is a operator type like std::greater.
+	/// NOTICE: This version's interface is different with C++20 version, you should pass a Operator TYPE NOT a Operator OBJECT.
+	/// @param ValueUserProvided is the value you want to compared with.
+	/// e.g ConstructBasicEligibleValue(EligibleValue, std::greater<void>, 5); is equivalent to ValueToBeChecked > 5.
+#define ConstructBasicEligibleValue(Name, Operator, ValueUserProvided)									\
+	template<auto ValueToBeChecked>																		\
+	constexpr bool Name = _EligibleUnderlyingValue<ValueToBeChecked, Operator, ValueUserProvided>;
+
+#else
+
+	/// @notice For non-type-involving constant expression you can directly use this. Like 8.
+	/// @param Name is name of constant expression which you defined.
+	/// @param ... is a std::pair list contains all the restrict for the value.
+	/// The first value of pair should be operator object like std::greater{},
+	/// the second value of pair is the value you want to compared with.
+	/// e.g ConstructBasicEligibleValue(EligibleValue, std::pair{ std::greater{}, 5 }); is equivalent to ValueToBeChecked > 5.
+#define ConstructBasicEligibleValue(Name,...)															\
+	template<auto ValueToBeChecked>																		\
+	constexpr bool Name = _EligibleUnderlyingValue<ValueToBeChecked, ##__VA_ARGS__>;
+
+#endif // __cplusplus < 202002L
+
+#endif // __cplusplus >= 201703L
 }

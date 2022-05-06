@@ -70,6 +70,12 @@ namespace ConstraintType
 	// ?<Byte||Short||Integer||Long>
 	AddTypeLayer(0x20, Any);
 	ConstructEligibleType(EligibleType7, 1, 0x20, Byte, Short, Integer, Long);
+
+#if __cplusplus >= 201703L
+	// (5,10)
+	ConstructBasicEligibleValue(EligibleValue0, std::greater<void>, 5);
+	ConstructBasicEligibleValue(EligibleValue1, std::less<void>, 10);
+#endif // __cplusplus >= 201703L
 }
 
 class Test
@@ -105,6 +111,11 @@ public:
 
 	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleType7<T>>>
 	static void TestEligibleType7(const T& c) {}
+
+#if __cplusplus >= 201703L
+	template<auto V, typename T = std::enable_if_t<ConstraintType::EligibleValue0<V>&& ConstraintType::EligibleValue1<V>>>
+	static void TestEligibleValue1() {}
+#endif // __cplusplus >= 201703L
 };
 
 int main()
@@ -143,6 +154,14 @@ int main()
 	//Test::TestEligibleType7(std::vector<int>());						// Error: int not in basic eligible type set.
 	Test::TestEligibleType7(std::vector<Long>());						// OK. Any
 	Test::TestEligibleType7(A<Long, Byte>());							// OK. Any
+
+#if __cplusplus >= 201703L
+	// (5,10)
+	//Test::TestEligibleValue1<4>();									// Error: 4 less than 5
+	Test::TestEligibleValue1<8>();										// OK
+#endif // __cplusplus >= 201703L
+
+
 	return 0;
 }
 
