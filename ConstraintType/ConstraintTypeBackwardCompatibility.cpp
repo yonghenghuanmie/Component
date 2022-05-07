@@ -27,6 +27,9 @@ struct A {};
 template<typename T1, typename T2>
 struct B {};
 
+template<typename T1, typename T2, int V>
+struct C {};
+
 namespace ConstraintType
 {
 	ConstructBasicEligibleType(BasicEligibleType, Byte, Short, Integer, Long);
@@ -80,6 +83,13 @@ namespace ConstraintType
 	// (5,10)
 	ConstructBasicEligibleValue(EligibleValue0, std::greater<void>, 5);
 	ConstructBasicEligibleValue(EligibleValue1, std::less<void>, 10);
+
+	// C<?,?,(5,10)>
+	AddValueLayerWithPosition(0x30, 2, C, T, T, V);
+	ConstructEligibleValueWithPosition(EligibleValue2, 1, 0x30, 2, std::greater<void>, 5);
+	ConstructEligibleValueWithPosition(EligibleValue2_1, 1, 0x30, 2, std::less<void>, 10);
+
+	GetUnderlyingValue(Value, 1, 0x30, 2);
 #endif // __cplusplus >= 201703L
 }
 
@@ -87,42 +97,39 @@ class Test
 {
 public:
 	template<typename T, typename Allow = std::enable_if_t<ConstraintType::BasicEligibleType<T>>>
-	static void TestBasicEligibleType(const T& c) {}
+	static void TestBasicEligibleType(const T&) {}
 
 	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleType1<T>>>
-	static void TestEligibleType1(const T& c)
-	{
-		for (auto&& i : c)
-		{
-			std::cout << (int)i.value << " ";
-		}
-	}
+	static void TestEligibleType1(const T&) {}
 
 	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleType2<T>>>
-	static void TestEligibleType2(const T& c) {}
+	static void TestEligibleType2(const T&) {}
 
 	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleType3<T>>>
-	static void TestEligibleType3(const T& c) {}
+	static void TestEligibleType3(const T&) {}
 
 	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleType4<T>>>
-	static void TestEligibleType4(const T& c) {}
+	static void TestEligibleType4(const T&) {}
 
 	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleType5<T>>>
-	static void TestEligibleType5(const T& c) {}
+	static void TestEligibleType5(const T&) {}
 
 	// B<A<?,Long>,int>
 	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleType5<T>&& ConstraintType::EligibleType6<T>>>
-	static void TestCombinedEligibleType(const T& c) {}
+	static void TestCombinedEligibleType(const T&) {}
 
 	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleType7<T>>>
-	static void TestEligibleType7(const T& c) {}
+	static void TestEligibleType7(const T&) {}
 
 	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleType8<T>>>
-	static void TestEligibleType8(const T& c) {}
+	static void TestEligibleType8(const T&) {}
 
 #if __cplusplus >= 201703L
-	template<auto V, typename T = std::enable_if_t<ConstraintType::EligibleValue0<V>&& ConstraintType::EligibleValue1<V>>>
+	template<auto V, typename Allow = std::enable_if_t<ConstraintType::EligibleValue0<V>&& ConstraintType::EligibleValue1<V>>>
 	static void TestEligibleValue1() {}
+
+	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleValue2<T>&& ConstraintType::EligibleValue2_1<T>>>
+	static void TestEligibleValue2(const T&) {}
 #endif // __cplusplus >= 201703L
 };
 
@@ -171,9 +178,13 @@ int main()
 	// (5,10)
 	//Test::TestEligibleValue1<4>();									// Error: 4 less than 5
 	Test::TestEligibleValue1<8>();										// OK
+
+	// C<?,?,(5,10)>
+	//Test::TestEligibleValue2(C<int, int, 10>());						// Error: 10 not less than 10
+	Test::TestEligibleValue2(C<int, int, 7>());							// OK
+
+	static_assert(ConstraintType::Value<C<int, int, 7 >> == 7);
 #endif // __cplusplus >= 201703L
-
-
 	return 0;
 }
 
