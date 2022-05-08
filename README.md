@@ -26,6 +26,13 @@ ConstructEligibleTypeWithPosition(EligibleType, 1, 0, 1, double);   // ->A<?,dou
 AddTypeLayer(0, Any);
 ConstructEligibleType(EligibleType, 1, 0, char, short, int, long long);   // ->?<char||short||int||long long>
 ```
+#### Constraint constant expression
+```c++
+template<typename T1, typename T2, int V>
+struct A {};
+AddValueLayerWithPosition(0, 2, A, T, T, V);
+ConstructEligibleValueWithPosition(EligibleValue, 1, 0, 2, std::pair{ std::greater{}, 5 }, std::pair{ std::less{}, 10 }); // ->A<?,?,(5,10)>
+```
 ### Usage
 This is a single file header library, just inlucde [`ConstraintType.h`](ConstraintType/ConstraintType.h).  
 For more example you can see [`ConstraintType/ConstraintType.cpp`](ConstraintType/ConstraintType.cpp) for concept or [`ConstraintType/ConstraintTypeBackwardCompatibility.cpp`](ConstraintType/ConstraintTypeBackwardCompatibility.cpp) for legacy.  
