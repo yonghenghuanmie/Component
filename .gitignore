@@ -37,6 +37,7 @@ x86
 x64
 Debug
 Release
+out
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
