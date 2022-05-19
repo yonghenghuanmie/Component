@@ -7,7 +7,7 @@ ConstraintType is a header library to constraint type in template parameters. It
 ```c++
 ConstructBasicEligibleType(BasicEligibleType, int, A, std::thread);   // ->int||A||std::thread
 ```
-#### Constraint multi-dimension generic type(support for at most 8 dimensions within one type)
+#### Constraint multi-dimension generic type
 ```c++
 AddTypeLayer(0, std::list);
 AddTypeLayer(0, std::deque);
@@ -21,11 +21,32 @@ struct A {};
 AddTypeLayerWithPosition(0, 1, A);
 ConstructEligibleTypeWithPosition(EligibleType, 1, 0, 1, double);   // ->A<?,double>
 ```
-#### Use Any to skip matching on specified layer
+#### Use Any to skip matching on specified layer or underlying type
 ```c++
 AddTypeLayer(0, Any);
 ConstructEligibleType(EligibleType, 1, 0, char, short, int, long long);   // ->?<char||short||int||long long>
 ```
+#### Constraint constant expression
+```c++
+template<typename T1, typename T2, int V>
+struct A {};
+AddValueLayerWithPosition(0, 2, A, T, T, V);
+ConstructEligibleValueWithPosition(EligibleValue, 1, 0, 2, std::pair{ std::greater{}, 5 }, std::pair{ std::less{}, 10 }); // ->A<?,?,(5,10)>
+```
+#### Error message
+`ErrorType<Type,Layer,Index>` will tell you compile failed on what Type which Layer and which Index.
+`ErrorValue<ValueToBeChecked,Operator,ValueUserProvided>` will tell you compile failed on what ValueToBeChecked what Operator and what ValueUserProvided.
+### Installation
+If you are using cmake, then just add  
+```
+include(FetchContent)
+FetchContent_Declare(
+    ConstraintType
+    URL https://github.com/yonghenghuanmie/Component/archive/refs/tags/v1.1.0.tar.gz # v1.1.0
+)
+FetchContent_MakeAvailable(ConstraintType)
+```
+those lines to your CMakeLists.txt.  
+Or you can just download [`ConstraintType.h`](ConstraintType/ConstraintType.h) and download requirement [`metalang99`](https://github.com/Hirrolot/metalang99).
 ### Usage
-This is a single file header library, just inlucde [`ConstraintType.h`](ConstraintType/ConstraintType.h).  
 For more example you can see [`ConstraintType/ConstraintType.cpp`](ConstraintType/ConstraintType.cpp) for concept or [`ConstraintType/ConstraintTypeBackwardCompatibility.cpp`](ConstraintType/ConstraintTypeBackwardCompatibility.cpp) for legacy.  
