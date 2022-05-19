@@ -3,7 +3,6 @@
 *	@date 2022.4.28
 */
 
-
 #if __cplusplus < 202002L
 
 // Don't forget <tuple>
@@ -13,7 +12,9 @@
 #include <deque>
 #include <vector>
 #include <iostream>
+#include <functional>
 #include <forward_list>
+#include "metalang99.h"
 #include "ConstraintType.h"
 
 struct Byte { signed char value; };
@@ -89,7 +90,27 @@ namespace ConstraintType
 	ConstructEligibleValueWithPosition(EligibleValue2, 1, 0x30, 2, std::greater<void>, 5);
 	ConstructEligibleValueWithPosition(EligibleValue2_1, 1, 0x30, 2, std::less<void>, 10);
 
-	GetUnderlyingValue(Value, 1, 0x30, 2);
+	// Spent some time to compile it so comment it.
+	//AddTypeLayer(0x4A, std::vector);
+	//AddTypeLayer(0x49, Any);
+	//AddTypeLayer(0x48, Any);
+	//AddTypeLayer(0x47, Any);
+	//AddTypeLayer(0x46, Any);
+	//AddTypeLayer(0x45, Any);
+	//AddTypeLayer(0x44, Any);
+	//AddTypeLayer(0x43, Any);
+	//AddTypeLayer(0x42, Any);
+	//AddTypeLayer(0x41, Any);
+	//AddValueLayerWithPosition(0x40, 2, C, T, T, V);
+
+	//ConstructEligibleValueWithPosition(EligibleValue3, 11, 0x4A,
+	//	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,														// Type or Value Index
+	//	std::greater<void>, 5);
+	//ConstructEligibleValueWithPosition(EligibleValue3_1, 11, 0x4A,
+	//	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,														// Type or Value Index
+	//	std::less<void>, 10);
+
+	ConstructGetUnderlyingValue(GetCThirdValue, 1, 0x30, 2);
 #endif // __cplusplus >= 201703L
 }
 
@@ -130,6 +151,9 @@ public:
 
 	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleValue2<T>&& ConstraintType::EligibleValue2_1<T>>>
 	static void TestEligibleValue2(const T&) {}
+
+	//template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleValue3<T>&& ConstraintType::EligibleValue3_1<T>>>
+	//static void TestEligibleValue3(const T&) {}
 #endif // __cplusplus >= 201703L
 };
 
@@ -183,7 +207,14 @@ int main()
 	//Test::TestEligibleValue2(C<int, int, 10>());						// Error: 10 not less than 10
 	Test::TestEligibleValue2(C<int, int, 7>());							// OK
 
-	static_assert(ConstraintType::Value<C<int, int, 7 >> == 7);
+	// Error: std::list doesn't meet EligibleValue3's requirements(std::vector)
+	//Test::TestEligibleValue3(std::list<std::list<std::deque<std::vector<std::list<std::vector<std::list<std::list<std::list<std::list<C<int, double, 6>>>>>>>>>>>());
+	// Error: 3 doesn't meet EligibleValue3's requirements(Type)
+	//Test::TestEligibleValue3(std::vector<std::list<std::deque<std::vector<std::list<std::vector<std::list<std::list<std::list<std::list<C<int, 3, 6>>>>>>>>>>>());
+	// OK
+	//Test::TestEligibleValue3(std::vector<std::list<std::deque<std::vector<std::list<std::vector<std::list<std::list<std::list<std::list<C<int, double, 6>>>>>>>>>>>());
+
+	static_assert(ConstraintType::GetCThirdValue(C<int, int, 7 >()) == 7);
 #endif // __cplusplus >= 201703L
 	return 0;
 }

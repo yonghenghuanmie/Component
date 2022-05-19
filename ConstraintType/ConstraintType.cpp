@@ -3,7 +3,6 @@
 *	@date 2022.4.26
 */
 
-
 #if __cplusplus >= 202002L
 
 // Don't forget <tuple> and <concept>
@@ -17,6 +16,7 @@
 #include <iostream>
 #include <functional>
 #include <forward_list>
+#include "metalang99.h"
 #include "ConstraintType.h"
 
 struct Byte { signed char value; };
@@ -92,8 +92,8 @@ namespace ConstraintType
 	AddValueLayerWithPosition(0x30, 2, C, T, T, V);
 	ConstructEligibleValueWithPosition(EligibleValue2, 1, 0x30, 2, std::pair{ std::greater{}, 5 }, std::pair{ std::less{}, 10 });
 
-	// Support at most 16 layers.
-	//AddTypeLayer(0x50, std::vector);
+	// Spent some time to compile it so comment it.
+	//AddTypeLayer(0x4A, std::vector);
 	//AddTypeLayer(0x49, Any);
 	//AddTypeLayer(0x48, Any);
 	//AddTypeLayer(0x47, Any);
@@ -105,11 +105,11 @@ namespace ConstraintType
 	//AddTypeLayer(0x41, Any);
 	//AddValueLayerWithPosition(0x40, 2, C, T, T, V);
 
-	//ConstructEligibleValueWithPosition(EligibleValue3,3 , 0x42,
-	//	/*1, 1, 1, 1, 1, 1, 1,*/ 1, 1, 1, 2,														// Type or Value Index
+	//ConstructEligibleValueWithPosition(EligibleValue3, 11, 0x4A,
+	//	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,														// Type or Value Index
 	//	std::pair{ std::greater{}, 5 }, std::pair{ std::less{}, 10 });
 
-	GetUnderlyingValue(Value, 1, 0x30, 2);
+	ConstructGetUnderlyingValue(GetCThirdValue, 1, 0x30, 2);
 }
 
 class Test
@@ -202,9 +202,14 @@ int main()
 	//Test::TestEligibleValue2(C<int, int, 10>());						// Error: 10 not less than 10
 	Test::TestEligibleValue2(C<int, int, 7>());							// OK
 
+	// Error: std::list doesn't meet EligibleValue3's requirements(std::vector)
+	//Test::TestEligibleValue3(std::list<std::list<std::deque<std::vector<std::list<std::vector<std::list<std::list<std::list<std::list<C<int, double, 6>>>>>>>>>>>());
+	// Error: 3 doesn't meet EligibleValue3's requirements(Type)
+	//Test::TestEligibleValue3(std::vector<std::list<std::deque<std::vector<std::list<std::vector<std::list<std::list<std::list<std::list<C<int, 3, 6>>>>>>>>>>>());
+	// OK
 	//Test::TestEligibleValue3(std::vector<std::list<std::deque<std::vector<std::list<std::vector<std::list<std::list<std::list<std::list<C<int, double, 6>>>>>>>>>>>());
 
-	static_assert(ConstraintType::Value<C<int, int, 7 >> == 7);
+	static_assert(ConstraintType::GetCThirdValue(C<int, int, 7 >()) == 7);
 	return 0;
 }
 
