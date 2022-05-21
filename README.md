@@ -26,7 +26,7 @@ ConstructEligibleTypeWithPosition(EligibleType, 1, 0, 1, double);   // ->A<?,dou
 AddTypeLayer(0, Any);
 ConstructEligibleType(EligibleType, 1, 0, char, short, int, long long);   // ->?<char||short||int||long long>
 ```
-#### Constraint constant expression
+#### Constraint or get constant expression
 ```c++
 template<typename T1, typename T2, int V>
 struct A {};
