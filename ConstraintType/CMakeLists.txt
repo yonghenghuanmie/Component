@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 
-set(PROJECT_VERSION 1.1.0)
+set(PROJECT_VERSION 1.2.0)
+project(ConstraintType          VERSION ${PROJECT_VERSION})
 project(ConstraintTypeExample14 VERSION ${PROJECT_VERSION})
 project(ConstraintTypeExample17 VERSION ${PROJECT_VERSION})
 project(ConstraintTypeExample20 VERSION ${PROJECT_VERSION})
@@ -16,7 +17,7 @@ endif()
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED)
 add_executable(ConstraintTypeExample14 ConstraintTypeBackwardCompatibility.cpp)
-target_include_directories(ConstraintTypeExample14 PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}> $<INSTALL_INTERFACE:include>)
+target_include_directories(ConstraintTypeExample14 PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}> $<INSTALL_INTERFACE:include>)
 unset(CMAKE_CXX_STANDARD)
 unset(CMAKE_CXX_STANDARD_REQUIRED)
 
@@ -24,7 +25,7 @@ unset(CMAKE_CXX_STANDARD_REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 add_executable(ConstraintTypeExample17 ConstraintTypeBackwardCompatibility.cpp)
-target_include_directories(ConstraintTypeExample17 PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}> $<INSTALL_INTERFACE:include>)
+target_include_directories(ConstraintTypeExample17 PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}> $<INSTALL_INTERFACE:include>)
 unset(CMAKE_CXX_STANDARD)
 unset(CMAKE_CXX_STANDARD_REQUIRED)
 
@@ -32,14 +33,13 @@ unset(CMAKE_CXX_STANDARD_REQUIRED)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 add_executable(ConstraintTypeExample20 ConstraintType.cpp)
-target_include_directories(ConstraintTypeExample20 PRIVATE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}> $<INSTALL_INTERFACE:include>)
+target_include_directories(ConstraintTypeExample20 PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}> $<INSTALL_INTERFACE:include>)
 unset(CMAKE_CXX_STANDARD)
 unset(CMAKE_CXX_STANDARD_REQUIRED)
 
 # Header library
-project(ConstraintType VERSION ${PROJECT_VERSION})
 add_library(ConstraintType INTERFACE)
-target_include_directories(ConstraintType INTERFACE $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>)
+target_include_directories(ConstraintType INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
 install(FILES ConstraintType.h DESTINATION include)
 
 # Dependency
