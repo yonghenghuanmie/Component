@@ -17,7 +17,7 @@ endif()
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED)
 add_executable(ConstraintTypeExample14 ConstraintTypeBackwardCompatibility.cpp)
-target_include_directories(ConstraintTypeExample14 PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}> $<INSTALL_INTERFACE:include>)
+target_include_directories(ConstraintTypeExample14 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 unset(CMAKE_CXX_STANDARD)
 unset(CMAKE_CXX_STANDARD_REQUIRED)
 
@@ -25,7 +25,7 @@ unset(CMAKE_CXX_STANDARD_REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 add_executable(ConstraintTypeExample17 ConstraintTypeBackwardCompatibility.cpp)
-target_include_directories(ConstraintTypeExample17 PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}> $<INSTALL_INTERFACE:include>)
+target_include_directories(ConstraintTypeExample17 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 unset(CMAKE_CXX_STANDARD)
 unset(CMAKE_CXX_STANDARD_REQUIRED)
 
@@ -33,13 +33,13 @@ unset(CMAKE_CXX_STANDARD_REQUIRED)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 add_executable(ConstraintTypeExample20 ConstraintType.cpp)
-target_include_directories(ConstraintTypeExample20 PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}> $<INSTALL_INTERFACE:include>)
+target_include_directories(ConstraintTypeExample20 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 unset(CMAKE_CXX_STANDARD)
 unset(CMAKE_CXX_STANDARD_REQUIRED)
 
 # Header library
 add_library(ConstraintType INTERFACE)
-target_include_directories(ConstraintType INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>)
+target_include_directories(ConstraintType INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 install(FILES ConstraintType.h DESTINATION include)
 
 # Dependency
