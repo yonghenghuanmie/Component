@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
+
 set(PROJECT_VERSION 1.1.0)
-
-
 project(ConstraintTypeExample14 VERSION ${PROJECT_VERSION})
 project(ConstraintTypeExample17 VERSION ${PROJECT_VERSION})
 project(ConstraintTypeExample20 VERSION ${PROJECT_VERSION})
