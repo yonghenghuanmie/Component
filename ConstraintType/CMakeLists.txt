@@ -49,9 +49,9 @@ project(ConstraintTypeExample20 VERSION ${PROJECT_VERSION})
     Example(20 ConstraintType.cpp)
 
 # Header library
+CompilerOption()
+Dependency()
 project(ConstraintType VERSION ${PROJECT_VERSION})
-    CompilerOption()
-    Dependency()
     add_library(${PROJECT_NAME} INTERFACE)
     target_include_directories(${PROJECT_NAME} INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
     install(FILES ConstraintType.h DESTINATION include)
