@@ -3,7 +3,7 @@ set(PROJECT_VERSION 1.3.0)
 
 function(SetCompilerOptions)
     # Show actual C++ version for MSVC
-    # Use compliant C+11 preprocessor for MSVC
+    # Use compliant C11 preprocessor for MSVC
     if(MSVC)
         target_compile_options(${PROJECT_NAME} PRIVATE /Zc:__cplusplus /Zc:preprocessor)
         target_compile_definitions(${PROJECT_NAME} PRIVATE ML99_ALLOW_POOR_DIAGNOSTICS)
