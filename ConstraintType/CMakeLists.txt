@@ -1,67 +1,57 @@
 cmake_minimum_required(VERSION 3.15)
-
 set(PROJECT_VERSION 1.2.0)
-project(ConstraintType          VERSION ${PROJECT_VERSION})
-project(ConstraintTypeExample14 VERSION ${PROJECT_VERSION})
-project(ConstraintTypeExample17 VERSION ${PROJECT_VERSION})
-project(ConstraintTypeExample20 VERSION ${PROJECT_VERSION})
 
-# Show actual C++ version for MSVC
-# Use compliant C+11 preprocessor for MSVC
-if(MSVC)
-    add_compile_options(/Zc:__cplusplus /Zc:preprocessor)
-    add_compile_definitions(ML99_ALLOW_POOR_DIAGNOSTICS)
-endif()
+function(CompilerOption)
+    # Show actual C++ version for MSVC
+    # Use compliant C+11 preprocessor for MSVC
+    if(MSVC)
+        add_compile_options(/Zc:__cplusplus /Zc:preprocessor)
+        add_compile_definitions(ML99_ALLOW_POOR_DIAGNOSTICS)
+    # Metalang99 relies on heavy macro machinery. To avoid useless macro expansion
+    # errors, please write this:
+    elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+      target_compile_options(${PROJECT_NAME} PRIVATE -fmacro-backtrace-limit=1)
+    elseif(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+      target_compile_options(${PROJECT_NAME} PRIVATE -ftrack-macro-expansion=0)
+    endif()
+endfunction()
+
+function(Dependency)
+    # Dependency
+    include(FetchContent)
+    FetchContent_Declare(
+        metalang99
+        URL https://github.com/Hirrolot/metalang99/archive/refs/tags/v1.13.1.tar.gz # v1.13.1
+    )
+    FetchContent_MakeAvailable(metalang99)
+endfunction()
+
+function(Example standard file_name)
+    CompilerOption()
+    Dependency()
+    set(CMAKE_CXX_STANDARD ${standard})
+    set(CMAKE_CXX_STANDARD_REQUIRED)
+    add_executable(${PROJECT_NAME} ${file_name})
+    target_include_directories(${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> $<INSTALL_INTERFACE:include>)
+    target_link_libraries(${PROJECT_NAME} PRIVATE metalang99)
+endfunction()
 
 # Example for C++ 14
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED)
-add_executable(ConstraintTypeExample14 ConstraintTypeBackwardCompatibility.cpp)
-target_include_directories(ConstraintTypeExample14 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-unset(CMAKE_CXX_STANDARD)
-unset(CMAKE_CXX_STANDARD_REQUIRED)
+project(ConstraintTypeExample14 VERSION ${PROJECT_VERSION})
+    Example(14 ConstraintTypeBackwardCompatibility.cpp)
 
 # Example for C++ 17
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED true)
-add_executable(ConstraintTypeExample17 ConstraintTypeBackwardCompatibility.cpp)
-target_include_directories(ConstraintTypeExample17 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-unset(CMAKE_CXX_STANDARD)
-unset(CMAKE_CXX_STANDARD_REQUIRED)
+project(ConstraintTypeExample17 VERSION ${PROJECT_VERSION})
+    Example(17 ConstraintTypeBackwardCompatibility.cpp)
 
 # Example for C++ 20
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED true)
-add_executable(ConstraintTypeExample20 ConstraintType.cpp)
-target_include_directories(ConstraintTypeExample20 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-unset(CMAKE_CXX_STANDARD)
-unset(CMAKE_CXX_STANDARD_REQUIRED)
+project(ConstraintTypeExample20 VERSION ${PROJECT_VERSION})
+    Example(20 ConstraintType.cpp)
 
 # Header library
-add_library(ConstraintType INTERFACE)
-target_include_directories(ConstraintType INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
-install(FILES ConstraintType.h DESTINATION include)
-
-# Dependency
-include(FetchContent)
-FetchContent_Declare(
-    metalang99
-    URL https://github.com/Hirrolot/metalang99/archive/refs/tags/v1.13.1.tar.gz # v1.13.1
-)
-FetchContent_MakeAvailable(metalang99)
-# Metalang99 relies on heavy macro machinery. To avoid useless macro expansion
-# errors, please write this:
-if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-  target_compile_options(ConstraintTypeExample14 PRIVATE -fmacro-backtrace-limit=1)
-  target_compile_options(ConstraintTypeExample17 PRIVATE -fmacro-backtrace-limit=1)
-  target_compile_options(ConstraintTypeExample20 PRIVATE -fmacro-backtrace-limit=1)
-elseif(CMAKE_C_COMPILER_ID STREQUAL "GNU")
-  target_compile_options(ConstraintTypeExample14 PRIVATE -ftrack-macro-expansion=0)
-  target_compile_options(ConstraintTypeExample17 PRIVATE -ftrack-macro-expansion=0)
-  target_compile_options(ConstraintTypeExample20 PRIVATE -ftrack-macro-expansion=0)
-endif()
-
-# Link for all the example code and header library
-target_link_libraries(ConstraintTypeExample14 PRIVATE metalang99)
-target_link_libraries(ConstraintTypeExample17 PRIVATE metalang99)
-target_link_libraries(ConstraintTypeExample20 PRIVATE metalang99)
+project(ConstraintType VERSION ${PROJECT_VERSION})
+    CompilerOption()
+    Dependency()
+    add_library(${PROJECT_NAME} INTERFACE)
+    target_include_directories(${PROJECT_NAME} INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+    install(FILES ConstraintType.h DESTINATION include)
