@@ -42,9 +42,11 @@ If you are using cmake, then just add
 include(FetchContent)
 FetchContent_Declare(
     ConstraintType
-    URL https://github.com/yonghenghuanmie/Component/archive/refs/tags/v1.1.0.tar.gz # v1.1.0
+    URL https://github.com/yonghenghuanmie/Component/archive/refs/tags/v1.2.0.tar.gz # v1.2.0
+    SOURCE_SUBDIR ConstraintType
 )
 FetchContent_MakeAvailable(ConstraintType)
+target_link_libraries(YOUR_PROJECT_NAME PRIVATE ConstraintType)
 ```
 those lines to your CMakeLists.txt.  
 Or you can just download [`ConstraintType.h`](ConstraintType/ConstraintType.h) and download requirement [`metalang99`](https://github.com/Hirrolot/metalang99).
