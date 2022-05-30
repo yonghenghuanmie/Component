@@ -39,16 +39,29 @@ ConstructEligibleValueWithPosition(EligibleValue, 1, 0, 2, std::pair{ std::great
 ### Installation
 If you are using cmake, then just add  
 ```cmake
+# Show actual C++ version for MSVC
+# Use compliant C11 preprocessor for MSVC
+if(MSVC)
+    target_compile_options(TARGET_NAME PRIVATE /Zc:__cplusplus /Zc:preprocessor)
+    target_compile_definitions(TARGET_NAME PRIVATE ML99_ALLOW_POOR_DIAGNOSTICS)
+# Metalang99 relies on heavy macro machinery. To avoid useless macro expansion
+# errors, please write this:
+elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(TARGET_NAME PRIVATE -fmacro-backtrace-limit=1)
+elseif(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(TARGET_NAME PRIVATE -ftrack-macro-expansion=0)
+endif()
+
 include(FetchContent)
 FetchContent_Declare(
     ConstraintType
-    URL https://github.com/yonghenghuanmie/Component/archive/refs/tags/v1.2.0.tar.gz # v1.2.0
+    URL https://github.com/yonghenghuanmie/Component/archive/refs/tags/v1.3.0.tar.gz # v1.3.0
     SOURCE_SUBDIR ConstraintType
 )
 FetchContent_MakeAvailable(ConstraintType)
-target_link_libraries(YOUR_PROJECT_NAME PRIVATE ConstraintType)
+target_link_libraries(TARGET_NAME PRIVATE ConstraintType)
 ```
-those lines to your CMakeLists.txt.  
+to your CMakeLists.txt and replace TARGET_NAME with correct target name.  
 Or you can just download [`ConstraintType.h`](ConstraintType/ConstraintType.h) and download requirement [`metalang99`](https://github.com/Hirrolot/metalang99).
 ### Usage
 For more example you can see [`ConstraintType/ConstraintType.cpp`](ConstraintType/ConstraintType.cpp) for concept or [`ConstraintType/ConstraintTypeBackwardCompatibility.cpp`](ConstraintType/ConstraintTypeBackwardCompatibility.cpp) for legacy.  
