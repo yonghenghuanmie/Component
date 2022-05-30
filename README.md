@@ -38,7 +38,7 @@ ConstructEligibleValueWithPosition(EligibleValue, 1, 0, 2, std::pair{ std::great
 `ErrorValue<ValueToBeChecked,Operator,ValueUserProvided>` will tell you compile failed on what ValueToBeChecked what Operator and what ValueUserProvided.
 ### Installation
 If you are using cmake, then just add  
-```
+```cmake
 include(FetchContent)
 FetchContent_Declare(
     ConstraintType
