@@ -82,6 +82,9 @@ namespace ConstraintType
 	template<typename T, _Layer layer, _Index index>
 	struct _IsAny :_NotEligibleType <T, layer, index> {};
 
+	template<_Layer layer, _Index index, typename... Rest>
+	struct _IsAny<Any<Rest...>, layer, index> :std::false_type {};
+
 	template<template<typename...> typename T, _Layer layer, _Index index, typename... Rest>
 	struct _IsAny<T<Rest...>, layer, index>
 		:std::conditional_t<_IsEligibleType<Any<Rest...>, layer, index>::value, std::true_type, _NotEligibleType<T<Rest...>, layer, index>>

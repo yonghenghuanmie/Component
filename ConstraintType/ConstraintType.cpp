@@ -79,10 +79,12 @@ namespace ConstraintType
 	// ?<Byte||Short||Integer||Long>
 	AddTypeLayer(0x20, Any);
 	ConstructEligibleType(EligibleType7, 1, 0x20, Byte, Short, Integer, Long);
+	AddTypeLayer(0x21, Any);
+	ConstructEligibleType(EligibleType7_1, 2, 0x21, Byte, Short, Integer, Long);
 
 	// Ignore the underlying type just focus on upper layer.
 	// std::vector<?>
-	AddTypeLayer(0x21, std::vector);
+	AddTypeLayer(0x22, std::vector);
 	ConstructEligibleType(EligibleType8, 1, 0x21, Any<void>);
 
 	// (5,10)
@@ -140,6 +142,9 @@ public:
 	template<ConstraintType::EligibleType7 T>
 	static void TestEligibleType7(const T&) {}
 
+	template<ConstraintType::EligibleType7_1 T>
+	static void TestEligibleType7_1(const T&) {}
+
 	template<ConstraintType::EligibleType8 T>
 	static void TestEligibleType8(const T&) {}
 
@@ -189,6 +194,7 @@ int main()
 	//Test::TestEligibleType7(std::vector<int>());						// Error: int not in basic eligible type set.
 	Test::TestEligibleType7(std::vector<Long>());						// OK. Any
 	Test::TestEligibleType7(A<Long, int>());							// OK. Any
+	Test::TestEligibleType7_1(std::vector<std::list<Byte>>());			// OK. Any<Any<...>>
 
 	// std::vector<?>
 	//Test::TestEligibleType8(std::list<int>());						// Error: double doesn't meet EligibleType6's requirements(std::vector)
