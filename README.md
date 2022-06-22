@@ -34,7 +34,8 @@ AddValueLayerWithPosition(0, 2, A, T, T, V);
 ConstructEligibleValueWithPosition(EligibleValue, 1, 0, 2, std::pair{ std::greater{}, 5 }, std::pair{ std::less{}, 10 }); // ->A<?,?,(5,10)>
 ```
 #### Error message
-You can use ```c++ #define ShowErrorMessage``` to show the following types of error message:
+You can use ```c++
+#define ShowErrorMessage``` to show the following types of error message:
 `ErrorType<Type,Layer,Index>` will tell you compile failed on what Type which Layer and which Index.
 `ErrorValue<ValueToBeChecked,Operator,ValueUserProvided>` will tell you compile failed on what ValueToBeChecked what Operator and what ValueUserProvided.
 This option is closed by default, so you can use this library on SFINAE.
