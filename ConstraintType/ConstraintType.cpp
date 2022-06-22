@@ -17,6 +17,7 @@
 #include <functional>
 #include <forward_list>
 #include "metalang99.h"
+#define ShowErrorMessage
 #include "ConstraintType.h"
 
 struct Byte { signed char value; };

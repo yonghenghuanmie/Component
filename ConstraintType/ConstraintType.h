@@ -70,7 +70,11 @@ namespace ConstraintType
 	struct _IsEligibleType;
 
 	template<typename T, _Layer layer, _Index index>
+#ifdef ShowErrorMessage
 	struct ErrorType;
+#else
+	struct ErrorType {};
+#endif // ShowErrorMessage
 
 	template<typename T, _Layer layer, _Index index>
 	struct _NotEligibleType :std::false_type
@@ -135,7 +139,11 @@ namespace ConstraintType
 #if __cplusplus >= 201703L
 
 	template<auto ValueToBeChecked, typename Operator, auto ValueUserProvided>
+#ifdef ShowErrorMessage
 	struct ErrorValue;
+#else
+	struct ErrorValue {};
+#endif // ShowErrorMessage
 
 	template<auto ValueToBeChecked, typename Operator, auto ValueUserProvided>
 	struct _NotEligibleValue :std::false_type
