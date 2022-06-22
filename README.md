@@ -55,7 +55,7 @@ endif()
 include(FetchContent)
 FetchContent_Declare(
     ConstraintType
-    URL https://github.com/yonghenghuanmie/Component/archive/refs/tags/v1.3.0.tar.gz # v1.3.0
+    URL https://github.com/yonghenghuanmie/Component/archive/refs/tags/v1.3.1.tar.gz # v1.3.1
     SOURCE_SUBDIR ConstraintType
 )
 FetchContent_MakeAvailable(ConstraintType)
