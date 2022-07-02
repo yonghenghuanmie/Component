@@ -64,6 +64,7 @@ namespace ConstraintType
 #endif // _BackwardCompatibility
 
 
+
 	using _Layer = std::size_t;
 	using _Index = std::size_t;
 	template<typename T, _Layer layer, _Index index>
@@ -100,39 +101,37 @@ namespace ConstraintType
 	struct _IsEligibleType :_IsAny<T, layer, index> {};
 
 
-	// Meta macro programming infrastructure
-	// Use metalang99 to re-implement
-#define _GetBeginFrom(n,...)	ML99_listDrop(n,ML99_list(__VA_ARGS__))
-#define _GetNthElement(n,...)	ML99_listGet(n, ML99_list(__VA_ARGS__))
 
-	// Generate template for Type
 	constexpr std::size_t _default_index = 0;
-#define _GetUnderlyingType_IMPL(LayerNumber,CurrentType)																											\
-	v(std::enable_if_t<_IsEligibleType<ML99_UNTUPLE(CurrentType),LayerNumber,_default_index>::value,																\
-	typename _IsEligibleType<ML99_UNTUPLE(CurrentType),LayerNumber,_default_index>::underlying_type>)																				
+	template<std::size_t TotalLayer, std::size_t StartLayer, typename T>
+	struct _ConstructGetUnderlyingType :
+		_ConstructGetUnderlyingType<TotalLayer - 1, StartLayer - 1, typename _IsEligibleType<T, StartLayer, _default_index>::underlying_type> {};
 
-#define _GetUnderlyingTypeWithPosition_IMPL(LayerNumber,CurrentType,TypeIndex)																						\
-	v(std::enable_if_t<_IsEligibleType<ML99_UNTUPLE(CurrentType),LayerNumber,TypeIndex>::value,																		\
-	typename _IsEligibleType<ML99_UNTUPLE(CurrentType),LayerNumber,TypeIndex>::underlying_type>)
+	template<std::size_t StartLayer, typename T>
+	struct _ConstructGetUnderlyingType<0, StartLayer, T>
+	{
+		using final_type = T;
+	};
 
-#define _ConstructGetUnderlyingType(TotalLayer,StartLayer,T)																										\
-	ML99_natMatchWithArgs(TotalLayer, v(_ConstructGetUnderlyingType_),StartLayer,T)
-#define _ConstructGetUnderlyingType_Z_IMPL(StartLayer,T) v(T)
-#define _ConstructGetUnderlyingType_S_IMPL(TotalLayer,StartLayer,T)																									\
-	ML99_call(																																						\
-	_GetUnderlyingType,																																				\
-	v(StartLayer-TotalLayer),																																		\
-	ML99_tuple(_ConstructGetUnderlyingType(v(TotalLayer),v(StartLayer),v(T))))
+	template<std::size_t TotalLayer, std::size_t StartLayer, typename T>
+	using _ConstructGetUnderlyingType_t = typename _ConstructGetUnderlyingType<TotalLayer, StartLayer, T>::final_type;
 
-#define _ConstructGetUnderlyingTypeWithPosition(TotalLayer,StartLayer,T,...)																						\
-	ML99_natMatchWithArgs(TotalLayer, v(_ConstructGetUnderlyingTypeWithPosition_),StartLayer,T,##__VA_ARGS__)
-#define _ConstructGetUnderlyingTypeWithPosition_Z_IMPL(StartLayer,T,...) v(T)
-#define _ConstructGetUnderlyingTypeWithPosition_S_IMPL(TotalLayer,StartLayer,T,...)																					\
-	ML99_call(																																						\
-	_GetUnderlyingTypeWithPosition,																																	\
-	v(StartLayer-TotalLayer),																																		\
-	ML99_tuple(_ConstructGetUnderlyingTypeWithPosition(v(TotalLayer),v(StartLayer),v(T),v(__VA_ARGS__))),															\
-	_GetNthElement(v(TotalLayer), v(__VA_ARGS__)))
+	template<std::size_t TotalLayer, std::size_t StartLayer, typename T, std::size_t First, std::size_t... Rest>
+	struct _ConstructGetUnderlyingTypeWithPosition :
+		_ConstructGetUnderlyingTypeWithPosition<TotalLayer - 1, StartLayer - 1, typename _IsEligibleType<T, StartLayer, First>::underlying_type, Rest...>
+	{
+		static_assert(TotalLayer != 0, "TotalLayer must greater than 0, please check your input!");
+	};
+
+	template<std::size_t StartLayer, typename T, std::size_t First>
+	struct _ConstructGetUnderlyingTypeWithPosition<1, StartLayer, T, First>
+	{
+		using final_type = typename _IsEligibleType<T, StartLayer, First>::underlying_type;
+	};
+
+	template<std::size_t TotalLayer, std::size_t StartLayer, typename T, std::size_t... Rest>
+	using _ConstructGetUnderlyingTypeWithPosition_t = typename _ConstructGetUnderlyingTypeWithPosition<TotalLayer, StartLayer, T, Rest...>::final_type;
+
 
 
 	// Value check infrastructure
@@ -190,16 +189,22 @@ namespace ConstraintType
 #define _ConstructTemplateParameters(...) ML99_LIST_EVAL_COMMA_SEP(ML99_listMapI(v(_GetLongName), ML99_list(__VA_ARGS__)))
 #define _ConstructSpecializeParameters(...) ML99_LIST_EVAL_COMMA_SEP(ML99_listMapI(v(_GetShortName), ML99_list(__VA_ARGS__)))
 
-#define _GetUnderlyingValueWithPosition_IMPL(LayerNumber,CurrentType,ValueIndex)																					\
-	v(_IsEligibleType<ML99_UNTUPLE(CurrentType),LayerNumber,ValueIndex>::underlying_value)
 
-#define _ConstructGetUnderlyingValueWithPosition(TotalLayer,StartLayer,T,...)																						\
-	ML99_call(																																						\
-	_GetUnderlyingValueWithPosition,																																\
-	v(StartLayer-TotalLayer+1),																																		\
-	ML99_if(ML99_natEq(ML99_dec(v(TotalLayer)),v(0)),ML99_tuple(T),																									\
-		ML99_tuple(_ConstructGetUnderlyingTypeWithPosition(ML99_dec(v(TotalLayer)),v(StartLayer),T,##__VA_ARGS__))),												\
-	_GetNthElement(ML99_dec(v(TotalLayer)),##__VA_ARGS__))
+	template<std::size_t TotalLayer, std::size_t StartLayer, typename T, std::size_t First, std::size_t... Rest>
+	struct _ConstructGetUnderlyingValueWithPosition :
+		_ConstructGetUnderlyingValueWithPosition<TotalLayer - 1, StartLayer - 1, typename _IsEligibleType<T, StartLayer, First>::underlying_type, Rest...>
+	{
+		static_assert(TotalLayer != 0, "TotalLayer must greater than 0, please check your input!");
+	};
+
+	template<std::size_t StartLayer, typename T, std::size_t First>
+	struct _ConstructGetUnderlyingValueWithPosition<1, StartLayer, T, First>
+	{
+		constexpr static auto final_value = _IsEligibleType<T, StartLayer, First>::underlying_value;
+	};
+
+	template<std::size_t TotalLayer, std::size_t StartLayer, typename T, std::size_t... Rest>
+	constexpr auto _ConstructGetUnderlyingValueWithPosition_v = _ConstructGetUnderlyingValueWithPosition<TotalLayer, StartLayer, T, Rest...>::final_value;
 
 
 
@@ -247,7 +252,7 @@ namespace ConstraintType
 	/// be the same layer you called AddTypeLayer with Type std::vector and the rest of parameter is int.
 #define ConstructEligibleType(Name,TotalLayer,StartLayer,...)																										\
 	template<typename T>																																			\
-	Concept Name = _EligibleUnderlyingType<ML99_EVAL(_ConstructGetUnderlyingType(v(TotalLayer),v(StartLayer),v(T))),##__VA_ARGS__>;
+	Concept Name = _EligibleUnderlyingType<_ConstructGetUnderlyingType_t<TotalLayer, StartLayer, T>, ##__VA_ARGS__>;
 
 
 	/// @notice For multi-dimension type you need to AddTypeLayerWithPosition first then ConstructEligibleTypeWithPosition.
@@ -279,9 +284,10 @@ namespace ConstraintType
 	/// StartLayer should be the same layer you called AddTypeLayerWithPosition with Type A and the rest of parameter is int.
 #define ConstructEligibleTypeWithPosition(Name,TotalLayer,StartLayer,...)																							\
 	template<typename T>																																			\
-	Concept Name = _EligibleUnderlyingType<ML99_EVAL(_ConstructGetUnderlyingTypeWithPosition(v(TotalLayer),v(StartLayer),v(T),v(__VA_ARGS__))),						\
-		ML99_LIST_EVAL(_GetBeginFrom(v(TotalLayer),v(__VA_ARGS__)))>;
-
+	Concept Name = _EligibleUnderlyingType<																															\
+		_ConstructGetUnderlyingTypeWithPosition_t<TotalLayer,StartLayer,T,ML99_LIST_EVAL_COMMA_SEP(ML99_listTake(v(TotalLayer),ML99_list(v(__VA_ARGS__))))>,		\
+		ML99_LIST_EVAL_COMMA_SEP(ML99_listDrop(v(TotalLayer),ML99_list(v(__VA_ARGS__))))																			\
+	>;
 
 #if __cplusplus >= 201703L
 
@@ -323,7 +329,7 @@ namespace ConstraintType
 	template<_ConstructTemplateParameters(v(__VA_ARGS__))>																											\
 	struct _IsEligibleType<Type<_ConstructSpecializeParameters(v(__VA_ARGS__))>,LayerNumber,ValueIndex>																\
 	{																																								\
-		constexpr static auto underlying_value = ML99_EVAL(ML99_cat(_GetNthElement(v(ValueIndex),v(__VA_ARGS__)),v(ValueIndex)));									\
+		constexpr static auto underlying_value = ML99_EVAL(ML99_cat(ML99_listGet(v(ValueIndex),ML99_list(v(__VA_ARGS__))),v(ValueIndex)));							\
 		using underlying_type = decltype(underlying_value);																											\
 	};
 
@@ -342,8 +348,9 @@ namespace ConstraintType
 #define ConstructEligibleValueWithPosition(Name,TotalLayer,StartLayer,...)																							\
 	template<typename T>																																			\
 	constexpr bool Name = _EligibleUnderlyingValue<																													\
-		ML99_EVAL(_ConstructGetUnderlyingValueWithPosition(TotalLayer,StartLayer,v(T),v(__VA_ARGS__))),																\
-		ML99_LIST_EVAL_COMMA_SEP(_GetBeginFrom(v(TotalLayer),v(__VA_ARGS__)))>;
+		_ConstructGetUnderlyingValueWithPosition_v<TotalLayer,StartLayer,T,ML99_LIST_EVAL_COMMA_SEP(ML99_listTake(v(TotalLayer),ML99_list(v(__VA_ARGS__))))>,		\
+		ML99_LIST_EVAL_COMMA_SEP(ML99_listDrop(v(TotalLayer),ML99_list(v(__VA_ARGS__))))																			\
+	>;
 
 	/// @notice A macro function to help you to get value in template parameter. All the parameters is same with
 	/// ConstructEligibleValueWithPosition except there is no rest part in ... .
@@ -351,7 +358,8 @@ namespace ConstraintType
 	template<typename T>																																			\
 	constexpr auto FunctionName(T&&)																																\
 	{																																								\
-		return ML99_EVAL(_ConstructGetUnderlyingValueWithPosition(TotalLayer, StartLayer, v(T), v(__VA_ARGS__)));													\
+		return _ConstructGetUnderlyingValueWithPosition_v<TotalLayer, StartLayer, T, __VA_ARGS__>;																	\
 	}
+
 #endif // __cplusplus >= 201703L
 }

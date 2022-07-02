@@ -5,7 +5,7 @@ function(SetCompilerOptions)
     # Show actual C++ version for MSVC
     # Use compliant C11 preprocessor for MSVC
     if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE /Zc:__cplusplus /Zc:preprocessor)
+        target_compile_options(${PROJECT_NAME} PRIVATE /Zc:__cplusplus /Zc:preprocessor )
         target_compile_definitions(${PROJECT_NAME} PRIVATE ML99_ALLOW_POOR_DIAGNOSTICS)
     # Metalang99 relies on heavy macro machinery. To avoid useless macro expansion
     # errors, please write this:

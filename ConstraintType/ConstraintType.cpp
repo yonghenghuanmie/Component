@@ -95,22 +95,21 @@ namespace ConstraintType
 	AddValueLayerWithPosition(0x30, 2, C, T, T, V);
 	ConstructEligibleValueWithPosition(EligibleValue2, 1, 0x30, 2, std::pair{ std::greater{}, 5 }, std::pair{ std::less{}, 10 });
 
-	// Spent some time to compile it so comment it.
-	//AddTypeLayer(0x4A, std::vector);
-	//AddTypeLayer(0x49, Any);
-	//AddTypeLayer(0x48, Any);
-	//AddTypeLayer(0x47, Any);
-	//AddTypeLayer(0x46, Any);
-	//AddTypeLayer(0x45, Any);
-	//AddTypeLayer(0x44, Any);
-	//AddTypeLayer(0x43, Any);
-	//AddTypeLayer(0x42, Any);
-	//AddTypeLayer(0x41, Any);
-	//AddValueLayerWithPosition(0x40, 2, C, T, T, V);
+	AddTypeLayer(0x4A, std::vector);
+	AddTypeLayer(0x49, Any);
+	AddTypeLayer(0x48, Any);
+	AddTypeLayer(0x47, Any);
+	AddTypeLayer(0x46, Any);
+	AddTypeLayer(0x45, Any);
+	AddTypeLayer(0x44, Any);
+	AddTypeLayer(0x43, Any);
+	AddTypeLayer(0x42, Any);
+	AddTypeLayer(0x41, Any);
+	AddValueLayerWithPosition(0x40, 2, C, T, T, V);
 
-	//ConstructEligibleValueWithPosition(EligibleValue3, 11, 0x4A,
-	//	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,														// Type or Value Index
-	//	std::pair{ std::greater{}, 5 }, std::pair{ std::less{}, 10 });
+	ConstructEligibleValueWithPosition(EligibleValue3, 11, 0x4A,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,														// Type or Value Index
+		std::pair{ std::greater{}, 5 }, std::pair{ std::less{}, 10 });
 
 	ConstructGetUnderlyingValue(GetCThirdValue, 1, 0x30, 2);
 }
@@ -155,8 +154,8 @@ public:
 	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleValue2<T>>>
 	static void TestEligibleValue2(const T&) {}
 
-	//template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleValue3<T>>>
-	//static void TestEligibleValue3(const T&) {}
+	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleValue3<T>>>
+	static void TestEligibleValue3(const T&) {}
 };
 
 int main()
@@ -176,7 +175,7 @@ int main()
 	Test::TestEligibleType3(std::vector<std::vector<Short>>());			// OK
 
 	//Test::TestEligibleType4(A<int, Long>());							// Error: second template parameter not in eligible type set
-	Test::TestEligibleType4(A<int, Byte>());
+	Test::TestEligibleType4(A<int, Byte>());							// OK
 
 	// B<A<?,Long>,?>													   
 	//Test::TestEligibleType5(B<A<int, int>, int>());					// Error: int not in basic eligible type set.
@@ -214,7 +213,7 @@ int main()
 	// Error: 3 doesn't meet EligibleValue3's requirements(Type)
 	//Test::TestEligibleValue3(std::vector<std::list<std::deque<std::vector<std::list<std::vector<std::list<std::list<std::list<std::list<C<int, 3, 6>>>>>>>>>>>());
 	// OK
-	//Test::TestEligibleValue3(std::vector<std::list<std::deque<std::vector<std::list<std::vector<std::list<std::list<std::list<std::list<C<int, double, 6>>>>>>>>>>>());
+	Test::TestEligibleValue3(std::vector<std::list<std::deque<std::vector<std::list<std::vector<std::list<std::list<std::list<std::list<C<int, double, 6>>>>>>>>>>>());
 
 	static_assert(ConstraintType::GetCThirdValue(C<int, int, 7 >()) == 7);
 	return 0;
