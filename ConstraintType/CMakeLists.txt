@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-set(PROJECT_VERSION 1.3.0)
+set(PROJECT_VERSION 1.4.0)
 
 function(SetCompilerOptions)
     # Show actual C++ version for MSVC
