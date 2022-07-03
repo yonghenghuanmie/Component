@@ -151,28 +151,63 @@ namespace ConstraintType
 		constexpr static ErrorValue<ValueToBeChecked, Operator, ValueUserProvided> _;
 	};
 
-#if __cplusplus < 202002L
 	template<auto ValueToBeChecked, typename Operator, auto ValueUserProvided>
 	struct _IsEligibleValue
 		:std::conditional_t < Operator{}(ValueToBeChecked, ValueUserProvided), std::true_type, _NotEligibleValue<ValueToBeChecked, Operator, ValueUserProvided >> {};
 
-	template<auto ValueToBeChecked, typename Operator, auto ValueUserProvided>
-	constexpr bool _EligibleUnderlyingValue = _IsEligibleValue<ValueToBeChecked, Operator, ValueUserProvided>::value;
+#if __cplusplus < 202002L
+	template<auto ValueToBeChecked, typename Operator, auto ValueUserProvided,
+		typename Allow = std::enable_if_t < std::is_same_v<decltype(Operator{}(ValueToBeChecked, ValueUserProvided)), bool >> >
+		constexpr bool _EligibleUnderlyingValue_Single() { return _IsEligibleValue<ValueToBeChecked, Operator, ValueUserProvided>::value; }
 #else
-	template<auto ValueToBeChecked, auto Operator, auto ValueUserProvided>
-	struct _IsEligibleValue
-		:std::conditional_t < Operator(ValueToBeChecked, ValueUserProvided), std::true_type, _NotEligibleValue<ValueToBeChecked, decltype(Operator), ValueUserProvided >> {};
-
-	/// @notice _CompareRequirement is for Rest... template parameters.
+	/// @notice _PairCompareRequirement is for Rest... template parameters.
 	/// @param Every object in Rest... must have first and second member,
 	/// first is a callable object which it needs two parameters and return boolean type,
 	/// second is an object passed to first as an argument.
 	template<auto... Rest>
-	concept _CompareRequirement = ((requires{ { Rest.first(Rest.second, Rest.second) }->std::same_as<bool>; })&&...);
+	concept _PairCompareRequirement = ((requires{ { Rest.first(Rest.second, Rest.second) }->std::same_as<bool>; })&&...);
 
-	template<auto Value, auto... Rest> requires _CompareRequirement<Rest...>
-	constexpr bool _EligibleUnderlyingValue = std::conjunction_v<_IsEligibleValue<Value, Rest.first, Rest.second>...>;
+	template<auto Value, auto... Rest> requires _PairCompareRequirement<Rest...>
+	constexpr bool _EligibleUnderlyingValue() { return std::conjunction_v<_IsEligibleValue<Value, decltype(Rest.first), Rest.second>...>; }
 #endif // __cplusplus < 202002L
+
+	template<auto ValueToBeChecked, typename Tuple, std::size_t Index, auto First, auto... Rest>
+	constexpr bool _GetEligibleValueResult()
+	{
+#ifdef ShowErrorMessage
+		static_assert(Index + 1 + sizeof...(Rest) == std::tuple_size_v<Tuple>, "Tuple size is not equal to Parameters size, please check your input.");
+#endif // ShowErrorMessage
+
+		if constexpr (Index >= std::tuple_size_v<Tuple>)
+			return true;
+		else
+		{
+			if constexpr (sizeof...(Rest) == 0)
+				return _IsEligibleValue<ValueToBeChecked, std::tuple_element_t<Index, Tuple>, First>::value;
+			else
+				return _IsEligibleValue<ValueToBeChecked, std::tuple_element_t<Index, Tuple>, First>::value &&
+				_GetEligibleValueResult<ValueToBeChecked, Tuple, Index + 1, Rest...>();
+		}
+	}
+
+	template<typename, typename = void>
+	struct is_tuple :std::false_type {};
+
+	template<typename Tuple>
+	struct is_tuple<Tuple, std::void_t<std::tuple_element_t<0, Tuple>>> :std::true_type {};
+
+	template<auto Value, typename T, auto... Rest>
+	constexpr bool _EligibleUnderlyingValue()
+	{
+		if constexpr (is_tuple<T>::value)
+			return _GetEligibleValueResult<Value, T, 0, Rest...>();
+#if __cplusplus < 202002L
+		else if (sizeof...(Rest) == 1)
+			return _EligibleUnderlyingValue_Single<Value, T, Rest...>();
+#endif // __cplusplus < 202002L
+		else
+			return false;
+	}
 
 #endif // __cplusplus >= 201703L
 
@@ -302,7 +337,7 @@ namespace ConstraintType
 	/// e.g: ConstructBasicEligibleValue(EligibleValue, std::greater<void>, 5); is equivalent to ValueToBeChecked > 5.
 #define ConstructBasicEligibleValue(Name, Operator, ValueUserProvided)																								\
 	template<auto ValueToBeChecked>																																	\
-	constexpr bool Name = _EligibleUnderlyingValue<ValueToBeChecked, Operator, ValueUserProvided>;
+	constexpr bool Name = _EligibleUnderlyingValue<ValueToBeChecked, Operator, ValueUserProvided>();
 
 #else
 
@@ -314,7 +349,7 @@ namespace ConstraintType
 	/// e.g: ConstructBasicEligibleValue(EligibleValue, std::pair{ std::greater{}, 5 }); is equivalent to ValueToBeChecked > 5.
 #define ConstructBasicEligibleValue(Name,...)																														\
 	template<auto ValueToBeChecked>																																	\
-	constexpr bool Name = _EligibleUnderlyingValue<ValueToBeChecked, ##__VA_ARGS__>;
+	constexpr bool Name = _EligibleUnderlyingValue<ValueToBeChecked, ##__VA_ARGS__>();
 
 #endif // __cplusplus < 202002L
 
@@ -350,7 +385,7 @@ namespace ConstraintType
 	constexpr bool Name = _EligibleUnderlyingValue<																													\
 		_ConstructGetUnderlyingValueWithPosition_v<TotalLayer,StartLayer,T,ML99_LIST_EVAL_COMMA_SEP(ML99_listTake(v(TotalLayer),ML99_list(v(__VA_ARGS__))))>,		\
 		ML99_LIST_EVAL_COMMA_SEP(ML99_listDrop(v(TotalLayer),ML99_list(v(__VA_ARGS__))))																			\
-	>;
+	>();
 
 	/// @notice A macro function to help you to get value in template parameter. All the parameters is same with
 	/// ConstructEligibleValueWithPosition except there is no rest part in ... .
