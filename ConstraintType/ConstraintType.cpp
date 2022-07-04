@@ -89,15 +89,17 @@ namespace ConstraintType
 	ConstructEligibleType(EligibleType8, 1, 0x21, Any<void>);
 
 	// (5,10)
-	ConstructBasicEligibleValue(EligibleValue1, std::pair{ std::greater{}, 5 }, std::pair{ std::less{}, 10 });
+	ConstructBasicEligibleValue(EligibleValue0, std::greater<void>, 5);
+	ConstructBasicEligibleValue(EligibleValue1, std::less<void>, 10);
 
 	// C<?,?,(5,10)>
 	AddValueLayerWithPosition(0x30, 2, C, T, T, V);
-	ConstructEligibleValueWithPosition(EligibleValue2, 1, 0x30, 2, std::pair{ std::greater{}, 5 }, std::pair{ std::less{}, 10 });
-	ConstructEligibleValueWithPosition(EligibleValue2_1, 1, 0x30, 2, std::tuple<std::greater<void>, std::less<void>>, 5, 10);
+	ConstructEligibleValueWithPosition(EligibleValue2, 1, 0x30, 2, std::greater<void>, 5);
+	ConstructEligibleValueWithPosition(EligibleValue2_1, 1, 0x30, 2, std::less<void>, 10);
+	ConstructEligibleValueWithPosition(EligibleValue2_2, 1, 0x30, 2, std::tuple<std::greater<void>, std::less<void>>, 5, 10);
 	// Compile error if you set ShowErrorMessage macro
-	ConstructEligibleValueWithPosition(EligibleValue2_2, 1, 0x30, 2, std::tuple<std::greater<void>, std::less<void>>, 5, 10, 1);
-	ConstructEligibleValueWithPosition(EligibleValue2_3, 1, 0x30, 2, std::tuple<std::greater<void>, std::less<void>>, 5);
+	ConstructEligibleValueWithPosition(EligibleValue2_3, 1, 0x30, 2, std::tuple<std::greater<void>, std::less<void>>, 5, 10, 1);
+	ConstructEligibleValueWithPosition(EligibleValue2_4, 1, 0x30, 2, std::tuple<std::greater<void>, std::less<void>>, 5);
 
 	AddTypeLayer(0x4A, std::vector);
 	AddTypeLayer(0x49, Any);
@@ -113,7 +115,7 @@ namespace ConstraintType
 
 	ConstructEligibleValueWithPosition(EligibleValue3, 11, 0x4A,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,														// Type or Value Index
-		std::pair{ std::greater{}, 5 }, std::pair{ std::less{}, 10 });
+		std::tuple<std::greater<void>, std::less<void>>, 5, 10);
 
 	ConstructGetUnderlyingValue(GetCThirdValue, 1, 0x30, 2);
 }
@@ -152,20 +154,20 @@ public:
 	template<ConstraintType::EligibleType8 T>
 	static void TestEligibleType8(const T&) {}
 
-	template<auto V, typename Allow = std::enable_if_t<ConstraintType::EligibleValue1<V>>>
+	template<auto V, typename Allow = std::enable_if_t<ConstraintType::EligibleValue0<V>&& ConstraintType::EligibleValue1<V>>>
 	static void TestEligibleValue1() {}
 
-	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleValue2<T>>>
+	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleValue2<T>&& ConstraintType::EligibleValue2_1<T>>>
 	static void TestEligibleValue2(const T&) {}
-
-	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleValue2_1<T>>>
-	static void TestEligibleValue2_1(const T&) {}
 
 	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleValue2_2<T>>>
 	static void TestEligibleValue2_2(const T&) {}
 
 	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleValue2_3<T>>>
 	static void TestEligibleValue2_3(const T&) {}
+
+	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleValue2_4<T>>>
+	static void TestEligibleValue2_4(const T&) {}
 
 	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleValue3<T>>>
 	static void TestEligibleValue3(const T&) {}
@@ -220,10 +222,10 @@ int main()
 	// C<?,?,(5,10)>
 	//Test::TestEligibleValue2(C<int, int, 10>());						// Error: 10 not less than 10
 	Test::TestEligibleValue2(C<int, int, 7>());							// OK
-	Test::TestEligibleValue2_1(C<int, int, 7>());						// OK
+	Test::TestEligibleValue2_2(C<int, int, 7>());						// OK
 	// Compile error if you set ShowErrorMessage macro
-	//Test::TestEligibleValue2_2(C<int, int, 7>());						// Error: Tuple size is not equal to Parameters size
 	//Test::TestEligibleValue2_3(C<int, int, 7>());						// Error: Tuple size is not equal to Parameters size
+	//Test::TestEligibleValue2_4(C<int, int, 7>());						// Error: Tuple size is not equal to Parameters size
 
 	// Error: std::list doesn't meet EligibleValue3's requirements(std::vector)
 	//Test::TestEligibleValue3(std::list<std::list<std::deque<std::vector<std::list<std::vector<std::list<std::list<std::list<std::list<C<int, double, 6>>>>>>>>>>>());

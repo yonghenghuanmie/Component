@@ -81,7 +81,7 @@ namespace ConstraintType
 	struct _NotEligibleType :std::false_type
 	{
 		// ErrorType will provide template parameter data when it goes wrong.
-		constexpr static ErrorType<T, layer, index> _;
+		constexpr static ErrorType<T, layer, index> _{};
 	};
 
 	template<typename T, _Layer layer, _Index index>
@@ -148,28 +148,16 @@ namespace ConstraintType
 	struct _NotEligibleValue :std::false_type
 	{
 		// ErrorValue will provide template parameter data when it goes wrong.
-		constexpr static ErrorValue<ValueToBeChecked, Operator, ValueUserProvided> _;
+		constexpr static ErrorValue<ValueToBeChecked, Operator, ValueUserProvided> _{};
 	};
 
 	template<auto ValueToBeChecked, typename Operator, auto ValueUserProvided>
 	struct _IsEligibleValue
 		:std::conditional_t < Operator{}(ValueToBeChecked, ValueUserProvided), std::true_type, _NotEligibleValue<ValueToBeChecked, Operator, ValueUserProvided >> {};
 
-#if __cplusplus < 202002L
 	template<auto ValueToBeChecked, typename Operator, auto ValueUserProvided,
 		typename Allow = std::enable_if_t < std::is_same_v<decltype(Operator{}(ValueToBeChecked, ValueUserProvided)), bool >> >
 		constexpr bool _EligibleUnderlyingValue_Single() { return _IsEligibleValue<ValueToBeChecked, Operator, ValueUserProvided>::value; }
-#else
-	/// @notice _PairCompareRequirement is for Rest... template parameters.
-	/// @param Every object in Rest... must have first and second member,
-	/// first is a callable object which it needs two parameters and return boolean type,
-	/// second is an object passed to first as an argument.
-	template<auto... Rest>
-	concept _PairCompareRequirement = ((requires{ { Rest.first(Rest.second, Rest.second) }->std::same_as<bool>; })&&...);
-
-	template<auto Value, auto... Rest> requires _PairCompareRequirement<Rest...>
-	constexpr bool _EligibleUnderlyingValue() { return std::conjunction_v<_IsEligibleValue<Value, decltype(Rest.first), Rest.second>...>; }
-#endif // __cplusplus < 202002L
 
 	template<auto ValueToBeChecked, typename Tuple, std::size_t Index, auto First, auto... Rest>
 	constexpr bool _GetEligibleValueResult()
@@ -201,10 +189,8 @@ namespace ConstraintType
 	{
 		if constexpr (is_tuple<T>::value)
 			return _GetEligibleValueResult<Value, T, 0, Rest...>();
-#if __cplusplus < 202002L
 		else if (sizeof...(Rest) == 1)
 			return _EligibleUnderlyingValue_Single<Value, T, Rest...>();
-#endif // __cplusplus < 202002L
 		else
 			return false;
 	}

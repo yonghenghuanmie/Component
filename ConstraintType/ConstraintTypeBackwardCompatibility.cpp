@@ -111,10 +111,7 @@ namespace ConstraintType
 
 	ConstructEligibleValueWithPosition(EligibleValue3, 11, 0x4A,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,														// Type or Value Index
-		std::greater<void>, 5);
-	ConstructEligibleValueWithPosition(EligibleValue3_1, 11, 0x4A,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,														// Type or Value Index
-		std::less<void>, 10);
+		std::tuple<std::greater<void>, std::less<void>>, 5, 10);
 
 	ConstructGetUnderlyingValue(GetCThirdValue, 1, 0x30, 2);
 #endif // __cplusplus >= 201703L
@@ -170,7 +167,7 @@ public:
 	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleValue2_4<T>>>
 	static void TestEligibleValue2_4(const T&) {}
 
-	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleValue3<T>&& ConstraintType::EligibleValue3_1<T>>>
+	template<typename T, typename Allow = std::enable_if_t<ConstraintType::EligibleValue3<T>>>
 	static void TestEligibleValue3(const T&) {}
 #endif // __cplusplus >= 201703L
 };
