@@ -31,7 +31,8 @@ ConstructEligibleType(EligibleType, 1, 0, char, short, int, long long);   // ->?
 template<typename T1, typename T2, int V>
 struct A {};
 AddValueLayerWithPosition(0, 2, A, T, T, V);
-ConstructEligibleValueWithPosition(EligibleValue, 1, 0, 2, std::pair{ std::greater{}, 5 }, std::pair{ std::less{}, 10 }); // ->A<?,?,(5,10)>
+ConstructEligibleValueWithPosition(EligibleValue, 1, 0, 2, std::pair{ std::greater{}, 5 }, std::pair{ std::less{}, 10 });   // ->A<?,?,(5,10)>
+ConstructEligibleValueWithPosition(EligibleValue, 1, 0, 2, std::tuple<std::greater<void>, std::less<void>>, 5, 10);         // ->A<?,?,(5,10)>
 ```
 #### Error message
 You can use
