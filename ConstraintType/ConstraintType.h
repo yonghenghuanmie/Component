@@ -113,7 +113,7 @@ namespace ConstraintType
 	struct _ConstructGetUnderlyingType<TotalLayer, StartLayer, T, false> {};
 
 	template<std::size_t StartLayer, typename T>
-	struct _ConstructGetUnderlyingType<0, StartLayer, T>
+	struct _ConstructGetUnderlyingType<0, StartLayer, T, true>
 	{
 		using final_type = T;
 	};
