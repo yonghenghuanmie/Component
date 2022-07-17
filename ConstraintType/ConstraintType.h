@@ -103,9 +103,14 @@ namespace ConstraintType
 
 
 	constexpr std::size_t _default_index = 0;
-	template<std::size_t TotalLayer, std::size_t StartLayer, typename T>
+	template<std::size_t TotalLayer, std::size_t StartLayer, typename T, bool Result = true>
 	struct _ConstructGetUnderlyingType :
-		_ConstructGetUnderlyingType<TotalLayer - 1, StartLayer - 1, typename _IsEligibleType<T, StartLayer, _default_index>::underlying_type> {};
+		_ConstructGetUnderlyingType<TotalLayer - 1, StartLayer - 1,
+		typename _IsEligibleType<T, StartLayer, _default_index>::underlying_type,
+		_IsEligibleType<T, StartLayer, _default_index>::value> {};
+
+	template<std::size_t TotalLayer, std::size_t StartLayer, typename T>
+	struct _ConstructGetUnderlyingType<TotalLayer, StartLayer, T, false> {};
 
 	template<std::size_t StartLayer, typename T>
 	struct _ConstructGetUnderlyingType<0, StartLayer, T>
@@ -116,21 +121,30 @@ namespace ConstraintType
 	template<std::size_t TotalLayer, std::size_t StartLayer, typename T>
 	using _ConstructGetUnderlyingType_t = typename _ConstructGetUnderlyingType<TotalLayer, StartLayer, T>::final_type;
 
-	template<std::size_t TotalLayer, std::size_t StartLayer, typename T, std::size_t First, std::size_t... Rest>
+	template<std::size_t TotalLayer, std::size_t StartLayer, typename T, bool Result, std::size_t First, std::size_t... Rest>
 	struct _ConstructGetUnderlyingTypeWithPosition :
-		_ConstructGetUnderlyingTypeWithPosition<TotalLayer - 1, StartLayer - 1, typename _IsEligibleType<T, StartLayer, First>::underlying_type, Rest...>
+		_ConstructGetUnderlyingTypeWithPosition<TotalLayer - 1, StartLayer - 1,
+		typename _IsEligibleType<T, StartLayer, First>::underlying_type,
+		_IsEligibleType<T, StartLayer, First>::value,
+		Rest...>
 	{
 		static_assert(TotalLayer != 0, "TotalLayer must greater than 0, please check your input!");
 	};
 
+	template<std::size_t TotalLayer, std::size_t StartLayer, typename T, std::size_t First, std::size_t... Rest>
+	struct _ConstructGetUnderlyingTypeWithPosition<TotalLayer, StartLayer, T, false, First, Rest...> {};
+
 	template<std::size_t StartLayer, typename T, std::size_t First>
-	struct _ConstructGetUnderlyingTypeWithPosition<1, StartLayer, T, First>
+	struct _ConstructGetUnderlyingTypeWithPosition<1, StartLayer, T, true, First>
 	{
-		using final_type = typename _IsEligibleType<T, StartLayer, First>::underlying_type;
+		using final_type = _IsEligibleType<T, StartLayer, First>;
 	};
 
 	template<std::size_t TotalLayer, std::size_t StartLayer, typename T, std::size_t... Rest>
-	using _ConstructGetUnderlyingTypeWithPosition_t = typename _ConstructGetUnderlyingTypeWithPosition<TotalLayer, StartLayer, T, Rest...>::final_type;
+	using _ConstructGetUnderlyingTypeWithPosition_t = std::enable_if_t<
+		_ConstructGetUnderlyingTypeWithPosition<TotalLayer, StartLayer, T, true, Rest...>::final_type::value,
+		typename _ConstructGetUnderlyingTypeWithPosition<TotalLayer, StartLayer, T, true, Rest...>::final_type::underlying_type
+	>;
 
 
 
