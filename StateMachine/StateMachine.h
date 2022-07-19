@@ -18,7 +18,7 @@ public:
 		for (auto&& [new_state, op] : paths)
 			if (op == operation)
 			{
-				if (callback_map[new_state](derive, state, new_state))
+				if (!callback_map.contains(new_state) || callback_map[new_state](derive, state, new_state))
 				{
 					state = new_state;
 					return true;
