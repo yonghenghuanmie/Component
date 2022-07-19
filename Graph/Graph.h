@@ -62,10 +62,12 @@ public:
 	}
 
 	void GetOutPath(const Vertex& vertex, std::invocable<PathType> auto&& callback)
+		requires std::is_same_v<std::invoke_result_t<decltype(callback), PathType>, bool>
 	{
 		for (auto&& element : matrix[vertex])
 			if (element.second != INFINITE)
-				callback(element);
+				if (!callback(element))
+					break;
 	}
 
 	auto GetInPath(const Vertex& vertex)
@@ -78,10 +80,12 @@ public:
 	}
 
 	void GetInPath(const Vertex& vertex, std::invocable<PathType> auto&& callback)
+		requires std::is_same_v<std::invoke_result_t<decltype(callback), PathType>, bool>
 	{
 		for (auto iterator = matrix.begin(); iterator != matrix.end(); ++iterator)
 			if (iterator->second.contains(vertex) && iterator->second[vertex] != INFINITE)
-				callback(PathType{ iterator->first, iterator->second[vertex] });
+				if (!callback(PathType{ iterator->first, iterator->second[vertex] }))
+					break;
 	}
 
 	void SetBestPathAlgorithm(std::invocable<const Vertex&, const Vertex&, Compare> auto&& function)

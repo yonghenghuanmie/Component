@@ -20,10 +20,10 @@ int main()
 	out_path.clear();
 	graph.RemoveEdge("C", "D");
 	bool not_exist = graph.AddEdge("C", "D") == graph.INFINITE;
-	graph.GetOutPath("C", [&out_path](auto&& new_path) {out_path.push_back(new_path); });
+	graph.GetOutPath("C", [&out_path](auto&& new_path) {out_path.push_back(new_path); return true; });
 	auto in_path = graph.GetInPath("B");
 	in_path.clear();
-	graph.GetInPath("B", [&in_path](auto&& new_path) {in_path.push_back(new_path); });
+	graph.GetInPath("B", [&in_path](auto&& new_path) {in_path.push_back(new_path); return true; });
 	auto weight = graph.AddEdge("C", "E");
 	not_exist = graph.AddEdge("C", "T") == graph.INFINITE;
 	auto result = graph.GetBestPath("A", "E");
