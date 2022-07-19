@@ -1,6 +1,6 @@
 #pragma once
 
-template<typename Vertex, typename Weight = int, Weight Infinite = std::numeric_limits<Weight>::max()>
+template<typename Vertex, typename Weight = int>
 class Graph
 {
 	using AdjacencyMatrix = std::unordered_map<Vertex, std::unordered_map<Vertex, Weight>>;
@@ -11,13 +11,13 @@ class Graph
 	std::function<std::vector<PathType>(const Vertex&, const Vertex&, Compare)> best_path;
 
 public:
-	constexpr static Weight INFINITE = Infinite;
+	const Weight INFINITE;
 
-	Graph() = default;
+	Graph(const Weight& Infinite) :INFINITE(Infinite) {}
 
-	Graph(auto&&... rests) { Construct(std::forward<decltype(rests)>(rests)...); }
+	Graph(const Weight& Infinite, auto&&... rests) :INFINITE(Infinite) { Construct(std::forward<decltype(rests)>(rests)...); }
 
-	Graph(std::initializer_list<std::tuple<Vertex, Weight, Vertex>> list)
+	Graph(const Weight& Infinite, std::initializer_list<std::tuple<Vertex, Weight, Vertex>> list) :INFINITE(Infinite)
 	{
 		for (auto&& element : list)
 			AddEdge(std::get<0>(element), std::get<2>(element)) = std::get<1>(element);
