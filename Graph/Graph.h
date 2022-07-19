@@ -1,6 +1,6 @@
 #pragma once
 
-template<typename Vertex, std::integral Weight = int>
+template<typename Vertex, typename Weight = int, Weight Infinite = std::numeric_limits<Weight>::max()>
 class Graph
 {
 	using AdjacencyMatrix = std::unordered_map<Vertex, std::unordered_map<Vertex, Weight>>;
@@ -10,9 +10,9 @@ class Graph
 	using Compare = bool(*)(const Weight&, const Weight&);
 	std::function<std::vector<PathType>(const Vertex&, const Vertex&, Compare)> best_path;
 
-	constexpr static Weight INFINITE = std::numeric_limits<Weight>::max();
-
 public:
+	constexpr static Weight INFINITE = Infinite;
+
 	Graph() = default;
 
 	Graph(auto&&... rests) { Construct(std::forward<decltype(rests)>(rests)...); }
@@ -20,27 +20,36 @@ public:
 	Graph(std::initializer_list<std::tuple<Vertex, Weight, Vertex>> list)
 	{
 		for (auto&& element : list)
-			AddEdge(std::get<0>(element), std::get<1>(element), std::get<2>(element));
+			AddEdge(std::get<0>(element), std::get<2>(element)) = std::get<1>(element);
 	}
 
-	void AddEdge(const Vertex& begin, const Weight& weight, const Vertex& end)
+	Weight& AddEdge(const Vertex& begin, const Vertex& end)
 	{
-		matrix[begin][end] = weight;
+		if (matrix.contains(begin) && matrix[begin].contains(end))
+			return matrix[begin][end];
+		else
+		{
+			Weight& weight = matrix[begin][end];
+			weight = INFINITE;
+			return weight;
+		}
 	}
 
-	void AddEdge(Vertex&& begin, Weight&& weight, Vertex&& end)
+	Weight& AddEdge(Vertex&& begin, Vertex&& end)
 	{
-		matrix[std::move(begin)][std::move(end)] = std::move(weight);
+		if (matrix.contains(begin) && matrix[begin].contains(end))
+			return matrix[begin][end];
+		else
+		{
+			Weight& weight = matrix[std::move(begin)][std::move(end)];
+			weight = INFINITE;
+			return weight;
+		}
 	}
 
 	void RemoveEdge(const Vertex& begin, const Vertex& end)
 	{
 		matrix[begin][end] = INFINITE;
-	}
-
-	Weight& GetWeight(const Vertex& begin, const Vertex& end)
-	{
-		return matrix[begin][end];
 	}
 
 	auto GetOutPath(const Vertex& vertex)
@@ -87,13 +96,13 @@ public:
 		else
 		{
 			std::vector<std::vector<PathType>> results;
-			IterateGraph(results, end, {}, { begin, Weight{ 0 } }, {});
+			IterateGraph(results, end, {}, { begin, Weight{} }, {});
 			if (!results.empty())
 			{
 				std::vector<std::pair<Weight, std::size_t>> sort_weight;
 				for (size_t i = 0; i < results.size(); ++i)
 					sort_weight.emplace_back(
-						std::accumulate(results[i].begin(), results[i].end(), Weight{ 0 }, [](auto&& acc, auto&& pair) {return acc + pair.second; }),
+						std::accumulate(results[i].begin(), results[i].end(), Weight{}, [](auto&& acc, auto&& pair) {return acc + pair.second; }),
 						i);
 				std::sort(std::execution::par_unseq, sort_weight.begin(), sort_weight.end(), [comparator](auto&& first, auto&& second) {return comparator(first.first, second.first); });
 				auto& result = results[sort_weight[0].second];
@@ -107,13 +116,13 @@ public:
 private:
 	void Construct(auto&& vertex1, auto&& weight, auto&& vertex2, auto&&... rests)
 	{
-		AddEdge(std::forward<decltype(vertex1)>(vertex1), std::forward<decltype(weight)>(weight), std::forward<decltype(vertex2)>(vertex2));
+		AddEdge(std::forward<decltype(vertex1)>(vertex1), std::forward<decltype(vertex2)>(vertex2)) = std::forward<decltype(weight)>(weight);
 		Construct(std::forward<decltype(rests)>(rests)...);
 	}
 
 	void Construct(auto&& vertex1, auto&& weight, auto&& vertex2)
 	{
-		AddEdge(std::forward<decltype(vertex1)>(vertex1), std::forward<decltype(weight)>(weight), std::forward<decltype(vertex2)>(vertex2));
+		AddEdge(std::forward<decltype(vertex1)>(vertex1), std::forward<decltype(vertex2)>(vertex2)) = std::forward<decltype(weight)>(weight);
 	}
 
 	void IterateGraph(std::vector<std::vector<PathType>>& results, const Vertex& target, std::vector<PathType> current_path, PathType new_path, std::unordered_set<Vertex> set)
