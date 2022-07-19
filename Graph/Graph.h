@@ -72,7 +72,7 @@ public:
 	{
 		for (auto iterator = matrix.begin(); iterator != matrix.end(); ++iterator)
 			if (iterator->second.contains(vertex) && iterator->second[vertex] != INFINITE)
-				callback({ iterator->first, iterator->second[vertex] });
+				callback(PathType{ iterator->first, iterator->second[vertex] });
 	}
 
 	void SetBestPathAlgorithm(std::invocable<const Vertex&, const Vertex&, Compare> auto&& function)
