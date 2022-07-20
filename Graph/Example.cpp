@@ -1,3 +1,4 @@
+#include <cassert>
 #include <limits>
 #include <numeric>
 #include <algorithm>
@@ -20,12 +21,14 @@ int main()
 	out_path.clear();
 	graph.RemoveEdge("C", "D");
 	bool not_exist = graph.AddEdge("C", "D") == graph.INFINITE;
+	assert(not_exist);
 	graph.GetOutPath("C", [&out_path](auto&& new_path) {out_path.push_back(new_path); return true; });
 	auto in_path = graph.GetInPath("B");
 	in_path.clear();
 	graph.GetInPath("B", [&in_path](auto&& new_path) {in_path.push_back(new_path); return true; });
 	auto weight = graph.AddEdge("C", "E");
 	not_exist = graph.AddEdge("C", "T") == graph.INFINITE;
+	assert(not_exist);
 	auto result = graph.GetBestPath("A", "E");
 	return 0;
 }

@@ -3,48 +3,64 @@
 template<typename Vertex, typename Weight = int>
 class Graph
 {
-	using AdjacencyMatrix = std::unordered_map<Vertex, std::unordered_map<Vertex, Weight>>;
-	using PathType = AdjacencyMatrix::mapped_type::value_type;
+	using PathType = std::unordered_map<Vertex, Weight>::value_type;
+
+	template<typename T>
+	struct Allocator :public std::allocator<T>
+	{
+		void construct(std::same_as<PathType> auto* p, auto&& tag, auto&& key_tuple, auto&& value_tuple)
+		{
+			assert(std::tuple_size_v<std::remove_reference_t<decltype(value_tuple)>> == 0);
+			::new((void*)p) PathType(std::forward<decltype(tag)>(tag),
+				std::forward<decltype(key_tuple)>(key_tuple),
+				std::forward_as_tuple(Graph<Vertex, Weight>::INFINITE));
+		}
+
+		template<class U>
+		void destroy(U* p)
+		{
+			p->~U();
+		}
+
+		template<typename U>
+		struct rebind
+		{
+			using type = Allocator<U>;
+		};
+	};
+
+	using AdjacencyMatrix = std::unordered_map<Vertex, std::unordered_map<Vertex, Weight, std::hash<Vertex>, std::equal_to<Vertex>, Allocator<PathType>>>;
 	AdjacencyMatrix matrix;
 
 	using Compare = bool(*)(const Weight&, const Weight&);
 	std::function<std::vector<PathType>(const Vertex&, const Vertex&, Compare)> best_path;
 
 public:
-	const Weight INFINITE;
+	static Weight INFINITE;
 
-	Graph(const Weight& Infinite) :INFINITE(Infinite) {}
+	Graph(const Weight& Infinite) { INFINITE = Infinite; }
 
-	Graph(const Weight& Infinite, auto&&... rests) :INFINITE(Infinite) { Construct(std::forward<decltype(rests)>(rests)...); }
-
-	Graph(const Weight& Infinite, std::initializer_list<std::tuple<Vertex, Weight, Vertex>> list) :INFINITE(Infinite)
+	Graph(const Weight& Infinite, auto&&... rests)
 	{
+		INFINITE = Infinite;
+		Construct(std::forward<decltype(rests)>(rests)...);
+	}
+
+	Graph(const Weight& Infinite, std::initializer_list<std::tuple<Vertex, Weight, Vertex>> list)
+	{
+		INFINITE = Infinite;
 		for (auto&& element : list)
 			AddEdge(std::get<0>(element), std::get<2>(element)) = std::get<1>(element);
 	}
 
 	Weight& AddEdge(const Vertex& begin, const Vertex& end)
 	{
-		if (matrix.contains(begin) && matrix[begin].contains(end))
-			return matrix[begin][end];
-		else
-		{
-			Weight& weight = matrix[begin][end];
-			weight = INFINITE;
-			return weight;
-		}
+		return matrix[begin][end];
 	}
 
 	Weight& AddEdge(Vertex&& begin, Vertex&& end)
 	{
-		if (matrix.contains(begin) && matrix[begin].contains(end))
-			return matrix[begin][end];
-		else
-		{
-			Weight& weight = matrix[std::move(begin)][std::move(end)];
-			weight = INFINITE;
-			return weight;
-		}
+		return matrix[std::move(begin)][std::move(end)];
 	}
 
 	void RemoveEdge(const Vertex& begin, const Vertex& end)
@@ -148,3 +164,6 @@ private:
 		}
 	}
 };
+
+template<typename Vertex, typename Weight>
+inline Weight Graph<Vertex, Weight>::INFINITE;
