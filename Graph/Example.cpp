@@ -1,6 +1,7 @@
 #include <cassert>
 #include <limits>
 #include <numeric>
+#include <iostream>
 #include <algorithm>
 #include <execution>
 #include <functional>
@@ -16,19 +17,26 @@ int main()
 		{ "D", 2, "E" }, { "D", 5, "B" }, { "C", 4, "E" },
 		{ "B", 2, "F" }, { "F", 1, "E" }, { "C", 5, "F" },
 		});
+
 	graph.AddEdge("C", "D") = 3;
 	auto out_path = graph.GetOutPath("C");
-	out_path.clear();
 	graph.RemoveEdge("C", "D");
 	bool not_exist = graph.AddEdge("C", "D") == graph.INFINITE;
 	assert(not_exist);
-	graph.GetOutPath("C", [&out_path](auto&& new_path) {out_path.push_back(new_path); return true; });
+	graph.GetOutPath("C", [](auto&& new_path) {std::cout << "C->" << new_path.first << '\n'; return true; });
+
 	auto in_path = graph.GetInPath("B");
-	in_path.clear();
-	graph.GetInPath("B", [&in_path](auto&& new_path) {in_path.push_back(new_path); return true; });
+	std::vector<decltype(graph)::PathType> copy_results;
+	graph.GetInPath("B", [&copy_results](auto&& new_path) {copy_results.push_back(new_path); return true; });
+
 	auto weight = graph.AddEdge("C", "E");
 	not_exist = graph.AddEdge("C", "T") == graph.INFINITE;
 	assert(not_exist);
+
 	auto result = graph.GetBestPath("A", "E");
+
+	if (graph.CacheSize() > 0)
+		graph.ClearCache();
+
 	return 0;
 }
