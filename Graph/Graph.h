@@ -38,6 +38,7 @@ private:
 	AdjacencyMatrix matrix;
 	mutable std::unordered_map<Vertex, Weight> cache;
 	std::function<BestPathType> best_path;
+	static constexpr ComparatorType less = [](const Weight& first, const Weight& second) {return first < second; };
 
 public:
 	static Weight INFINITE;
@@ -118,27 +119,52 @@ public:
 		best_path = std::forward<decltype(function)>(function);
 	}
 
-	ResultsType GetBestPath(const Vertex& begin, const Vertex& end, ComparatorType comparator = [](const Weight& first, const Weight& second) {return first < second; }) const
+	ResultsType GetBestPath(const Vertex& begin, const Vertex& end, ComparatorType comparator = less) const
 	{
 		if (best_path)
 			return best_path(this, begin, end, comparator);
-		else
+		else if constexpr (requires (Weight a, Weight b) { a < b; a -= b; })
 		{
-			std::vector<ResultsType> results;
-			cache[begin] = Weight{};
-			IterateGraph(results, end, {}, *cache.find(begin), {});
-			if (!results.empty())
+			if (Weight{} + Weight{} != Weight{})
+				return {};
+			if (comparator(Weight{}, INFINITE))
 			{
-				std::vector<std::pair<Weight, std::size_t>> sort_weight;
-				for (size_t i = 0; i < results.size(); ++i)
-					sort_weight.emplace_back(std::accumulate(results[i].begin(), results[i].end(), Weight{}, [](auto&& acc, auto&& pair) {return acc + pair.get().second; }), i);
-				std::sort(std::execution::par_unseq, sort_weight.begin(), sort_weight.end(), [comparator](auto&& first, auto&& second) {return comparator(first.first, second.first); });
-				auto& best_result = results[sort_weight[0].second];
-				cache[begin] = sort_weight[0].first;
+				cache[begin] = Weight{};
+				if (begin == end)
+					return { *cache.find(begin) };
+				std::vector<ResultsType> results;
+				std::vector<std::unordered_set<Vertex>> sets;
+				std::vector<Weight> left_weight;
+				for (auto&& path : matrix.at(begin))
+				{
+					results.emplace_back(ResultsType{ *cache.find(begin), path });
+					sets.emplace_back(std::unordered_set{ begin, path.first });
+					left_weight.emplace_back(path.second);
+				}
+				auto best_result = IterateGraphBFS(results, end, sets, left_weight);
+				if (best_result.size() > 1)
+					cache[begin] = std::accumulate(best_result.begin(), best_result.end(), Weight{}, [](auto&& acc, auto&& pair) {return acc + pair.get().second; });
 				return best_result;
 			}
-			return {};
+			else
+			{
+				std::vector<ResultsType> results;
+				cache[begin] = Weight{};
+				IterateGraphDFS(results, end, {}, *cache.find(begin), {});
+				if (!results.empty())
+				{
+					std::vector<std::pair<Weight, std::size_t>> sort_weight;
+					for (size_t i = 0; i < results.size(); ++i)
+						sort_weight.emplace_back(std::accumulate(results[i].begin(), results[i].end(), Weight{}, [](auto&& acc, auto&& pair) {return acc + pair.get().second; }), i);
+					std::sort(std::execution::par_unseq, sort_weight.begin(), sort_weight.end(), [comparator](auto&& first, auto&& second) {return comparator(first.first, second.first); });
+					auto& best_result = results[sort_weight[0].second];
+					cache[begin] = sort_weight[0].first;
+					return best_result;
+				}
+				return {};
+			}
 		}
+		return {};
 	}
 
 	auto CacheSize() { return cache.size(); }
@@ -156,7 +182,7 @@ private:
 		AddEdge(std::forward<decltype(vertex1)>(vertex1), std::forward<decltype(vertex2)>(vertex2)) = std::forward<decltype(weight)>(weight);
 	}
 
-	void IterateGraph(std::vector<ResultsType>& results, const Vertex& target, ResultsType current_path, const PathType& new_path, std::unordered_set<Vertex> set) const
+	void IterateGraphDFS(std::vector<ResultsType>& results, const Vertex& target, ResultsType current_path, const PathType& new_path, std::unordered_set<Vertex> set) const
 	{
 		set.insert(new_path.first);
 		current_path.push_back(new_path);
@@ -171,8 +197,57 @@ private:
 		{
 			if (set.contains(vertex) || weight == INFINITE)
 				continue;
-			IterateGraph(results, target, current_path, *matrix.at(new_path.first).find(vertex), set);
+			IterateGraphDFS(results, target, current_path, *matrix.at(new_path.first).find(vertex), set);
 		}
+	}
+
+	// All the weights must greater than Weight{}
+	ResultsType IterateGraphBFS(std::vector<ResultsType>& results, const Vertex& target, std::vector<std::unordered_set<Vertex>>& sets, std::vector<Weight>& left_weight) const
+	{
+		assert(results.size() == sets.size());
+		assert(results.size() == left_weight.size());
+		Weight min = std::accumulate(results.begin(), results.end(), INFINITE,
+			[](const Weight& acc, const ResultsType& path) {return acc < (path.back().get().second > Weight{} ? path.back().get().second : INFINITE) ? acc : path.back().get().second; });
+		auto old_size = results.size();
+		for (size_t i = 0; i < old_size; i++)
+		{
+			if (left_weight[i] > Weight{})
+			{
+				left_weight[i] -= min;
+				auto old_path = results[i].back();
+				if (left_weight[i] == Weight{} && matrix.at(old_path.get().first).size() > 0)
+				{
+					bool first_time = true;
+					auto index = i;
+					auto result_copy = results[i];
+					auto set_copy = sets[i];
+					for (auto&& [vertex, weight] : matrix.at(old_path.get().first))
+					{
+						if (sets[i].contains(vertex) || weight == INFINITE)
+							continue;
+						switch (first_time)
+						{
+						case false:
+							results.push_back(result_copy);
+							sets.push_back(set_copy);
+							left_weight.emplace_back();
+							index = results.size() - 1;
+						case true:
+							first_time = false;
+							results[index].push_back(*matrix.at(old_path.get().first).find(vertex));
+							sets[index].insert(vertex);
+							left_weight[index] = weight;
+							if (vertex == target)
+								return results[index];
+							break;
+						}
+					}
+				}
+			}
+		}
+		if (auto iter = std::max_element(std::execution::par_unseq, left_weight.begin(), left_weight.end()); iter == left_weight.end() || *iter <= Weight{})
+			return {};
+		return IterateGraphBFS(results, target, sets, left_weight);
 	}
 };
 
