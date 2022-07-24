@@ -1,5 +1,6 @@
 #include <cassert>
 #include <limits>
+#include <variant>
 #include <numeric>
 #include <iostream>
 #include <algorithm>
@@ -33,7 +34,23 @@ int main()
 	not_exist = graph.AddEdge("C", "T") == graph.INFINITE;
 	assert(not_exist);
 
-	auto result = graph.GetBestPath("A", "E");
+	auto result_handle = [](auto&& value) {
+		if constexpr (std::is_same_v<std::remove_reference_t<decltype(value)>, decltype(graph)::ResultsType>)
+			for (auto&& path : value)
+				std::cout << path.get().first << " " << path.get().second << '\n';
+		else
+			std::cout << value << '\n';
+		std::cout << std::endl;
+	};
+	// OK
+	auto error_or_result = graph.GetBestPath("A", "E");
+	std::visit(result_handle, error_or_result);
+	// empty vector
+	error_or_result = graph.GetBestPath("B", "T");
+	std::visit(result_handle, error_or_result);
+	// error message
+	error_or_result = graph.GetBestPath("F", "F");
+	std::visit(result_handle, error_or_result);
 
 	if (graph.CacheSize() > 0)
 		graph.ClearCache();

@@ -1,13 +1,14 @@
 #pragma once
 
 template<typename Vertex, typename Weight = int>
+	requires requires {Weight{} != Weight{}; }
 class Graph
 {
 public:
 	using PathType = std::unordered_map<Vertex, Weight>::value_type;
 	using ResultsType = std::vector<std::reference_wrapper<const PathType>>;
 	using ComparatorType = bool(*)(const Weight&, const Weight&);
-	using BestPathType = ResultsType(const Graph<Vertex, Weight>*, const Vertex&, const Vertex&, ComparatorType);
+	using BestPathType = std::variant<std::string, ResultsType>(const Graph<Vertex, Weight>*, const Vertex&, const Vertex&, ComparatorType);
 
 private:
 	template<typename T>
@@ -43,37 +44,37 @@ private:
 public:
 	static Weight INFINITE;
 
-	Graph(const Weight& Infinite) { INFINITE = Infinite; }
+	Graph(const Weight& Infinite) noexcept { INFINITE = Infinite; }
 
-	Graph(const Weight& Infinite, auto&&... rests)
+	Graph(const Weight& Infinite, auto&&... rests) noexcept
 	{
 		INFINITE = Infinite;
 		Construct(std::forward<decltype(rests)>(rests)...);
 	}
 
-	Graph(const Weight& Infinite, std::initializer_list<std::tuple<Vertex, Weight, Vertex>> list)
+	Graph(const Weight& Infinite, std::initializer_list<std::tuple<Vertex, Weight, Vertex>> list) noexcept
 	{
 		INFINITE = Infinite;
 		for (auto&& element : list)
 			AddEdge(std::get<0>(element), std::get<2>(element)) = std::get<1>(element);
 	}
 
-	Weight& AddEdge(const Vertex& begin, const Vertex& end)
+	Weight& AddEdge(const Vertex& begin, const Vertex& end) noexcept
 	{
 		return matrix[begin][end];
 	}
 
-	Weight& AddEdge(Vertex&& begin, Vertex&& end)
+	Weight& AddEdge(Vertex&& begin, Vertex&& end) noexcept
 	{
 		return matrix[std::move(begin)][std::move(end)];
 	}
 
-	void RemoveEdge(const Vertex& begin, const Vertex& end)
+	void RemoveEdge(const Vertex& begin, const Vertex& end) noexcept
 	{
 		matrix[begin][end] = INFINITE;
 	}
 
-	ResultsType GetOutPath(const Vertex& vertex) const
+	ResultsType GetOutPath(const Vertex& vertex) const noexcept
 	{
 		ResultsType results;
 		if (matrix.contains(vertex))
@@ -83,7 +84,7 @@ public:
 		return results;
 	}
 
-	void GetOutPath(const Vertex& vertex, std::invocable<const PathType&> auto&& callback) const
+	void GetOutPath(const Vertex& vertex, std::invocable<const PathType&> auto&& callback) const noexcept
 		requires std::is_same_v<std::invoke_result_t<decltype(callback), const PathType&>, bool>
 	{
 		if (matrix.contains(vertex))
@@ -93,7 +94,7 @@ public:
 						break;
 	}
 
-	ResultsType GetInPath(const Vertex& vertex) const
+	ResultsType GetInPath(const Vertex& vertex) const noexcept
 	{
 		ResultsType results;
 		for (auto iterator = matrix.begin(); iterator != matrix.end(); ++iterator)
@@ -105,7 +106,7 @@ public:
 		return results;
 	}
 
-	void GetInPath(const Vertex& vertex, std::invocable<const PathType&> auto&& callback) const
+	void GetInPath(const Vertex& vertex, std::invocable<const PathType&> auto&& callback) const noexcept
 		requires std::is_same_v<std::invoke_result_t<decltype(callback), const PathType&>, bool>
 	{
 		for (auto iterator = matrix.begin(); iterator != matrix.end(); ++iterator)
@@ -114,24 +115,24 @@ public:
 					break;
 	}
 
-	void SetBestPathAlgorithm(std::invocable<const Graph<Vertex, Weight>*, const Vertex&, const Vertex&, ComparatorType> auto&& function)
+	void SetBestPathAlgorithm(std::invocable<const Graph<Vertex, Weight>*, const Vertex&, const Vertex&, ComparatorType> auto&& function) noexcept
 	{
 		best_path = std::forward<decltype(function)>(function);
 	}
 
-	ResultsType GetBestPath(const Vertex& begin, const Vertex& end, ComparatorType comparator = less) const
+	std::variant<std::string, ResultsType> GetBestPath(const Vertex& begin, const Vertex& end, ComparatorType comparator = less) const
 	{
 		if (best_path)
 			return best_path(this, begin, end, comparator);
 		else if constexpr (requires (Weight a, Weight b) { a < b; a -= b; })
 		{
 			if (Weight{} + Weight{} != Weight{})
-				return {};
+				return "Weight{} + Weight{} must equal to Weight{}";
+			if (begin == end)
+				return "begin should not equivalent to end.";
 			if (comparator(Weight{}, INFINITE))
 			{
 				cache[begin] = Weight{};
-				if (begin == end)
-					return { *cache.find(begin) };
 				std::vector<ResultsType> results;
 				std::vector<std::unordered_set<Vertex>> sets;
 				std::vector<Weight> left_weight;
@@ -161,23 +162,23 @@ public:
 					cache[begin] = sort_weight[0].first;
 					return best_result;
 				}
-				return {};
+				return ResultsType{};
 			}
 		}
-		return {};
+		else return "Weight must have comparative and arithmetic functionality or you can use SetBestPathAlgorithm to set your own algorithm.";
 	}
 
-	auto CacheSize() { return cache.size(); }
-	void ClearCache() { cache.clear(); }
+	auto CacheSize() noexcept { return cache.size(); }
+	void ClearCache() noexcept { cache.clear(); }
 
 private:
-	void Construct(auto&& vertex1, auto&& weight, auto&& vertex2, auto&&... rests)
+	void Construct(auto&& vertex1, auto&& weight, auto&& vertex2, auto&&... rests) noexcept
 	{
 		AddEdge(std::forward<decltype(vertex1)>(vertex1), std::forward<decltype(vertex2)>(vertex2)) = std::forward<decltype(weight)>(weight);
 		Construct(std::forward<decltype(rests)>(rests)...);
 	}
 
-	void Construct(auto&& vertex1, auto&& weight, auto&& vertex2)
+	void Construct(auto&& vertex1, auto&& weight, auto&& vertex2) noexcept
 	{
 		AddEdge(std::forward<decltype(vertex1)>(vertex1), std::forward<decltype(vertex2)>(vertex2)) = std::forward<decltype(weight)>(weight);
 	}
@@ -215,7 +216,7 @@ private:
 			{
 				left_weight[i] -= min;
 				auto old_path = results[i].back();
-				if (left_weight[i] == Weight{} && matrix.at(old_path.get().first).size() > 0)
+				if (left_weight[i] == Weight{} && matrix.contains(old_path.get().first))
 				{
 					bool first_time = true;
 					auto index = i;
@@ -252,4 +253,5 @@ private:
 };
 
 template<typename Vertex, typename Weight>
+	requires requires {Weight{} != Weight{}; }
 inline Weight Graph<Vertex, Weight>::INFINITE;
