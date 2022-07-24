@@ -113,7 +113,7 @@ public:
 					break;
 	}
 
-	void SetBestPathAlgorithm(std::invocable<const Graph<Vertex, Weight>*, const Vertex&, const Vertex&, ComparatorType> auto&& function) noexcept
+	void SetBestPathAlgorithm(std::invocable<const Graph<Vertex, Weight>*, const Vertex&, const Vertex&, std::function<bool(const Weight&, const Weight&)>&&> auto&& function) noexcept
 	{
 		best_path = std::forward<decltype(function)>(function);
 	}
