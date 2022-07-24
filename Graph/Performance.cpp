@@ -41,7 +41,7 @@ int main()
 	{
 		elapse e;
 		for (size_t i = 0; i < test_set.size() / 2; i++)
-			graph.GetBestPath(test_set[i * 2], test_set[i * 2 + 1], [](const int& first, const int& second) {return first > second; });
+			graph.GetBestPath(test_set[i * 2], test_set[i * 2 + 1], std::greater<void>{});
 	}
 	return 0;
 }

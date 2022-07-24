@@ -7,8 +7,7 @@ class Graph
 public:
 	using PathType = std::unordered_map<Vertex, Weight>::value_type;
 	using ResultsType = std::vector<std::reference_wrapper<const PathType>>;
-	using ComparatorType = bool(*)(const Weight&, const Weight&);
-	using BestPathType = std::variant<std::string, ResultsType>(const Graph<Vertex, Weight>*, const Vertex&, const Vertex&, ComparatorType);
+	using BestPathType = std::variant<std::string, ResultsType>(const Graph<Vertex, Weight>*, const Vertex&, const Vertex&, std::function<bool(const Weight&, const Weight&)>&&);
 
 private:
 	template<typename T>
@@ -39,7 +38,6 @@ private:
 	AdjacencyMatrix matrix;
 	mutable std::unordered_map<Vertex, Weight> cache;
 	std::function<BestPathType> best_path;
-	static constexpr ComparatorType less = [](const Weight& first, const Weight& second) {return first < second; };
 
 public:
 	static Weight INFINITE;
@@ -120,10 +118,13 @@ public:
 		best_path = std::forward<decltype(function)>(function);
 	}
 
-	std::variant<std::string, ResultsType> GetBestPath(const Vertex& begin, const Vertex& end, ComparatorType comparator = less) const
+	// Do not pass std::function to comparator
+	template<std::invocable<const Weight&, const Weight&> T = std::less<void>>
+		requires (std::is_pointer_v<T> || (std::is_object_v<T> && std::is_empty_v<T>)) && std::is_same_v<std::invoke_result_t<T, const Weight&, const Weight&>, bool>
+	std::variant<std::string, ResultsType> GetBestPath(const Vertex& begin, const Vertex& end, T comparator = T{}) const
 	{
 		if (best_path)
-			return best_path(this, begin, end, comparator);
+			return best_path(this, begin, end, std::function<bool(const Weight&, const Weight&)>{ comparator });
 		else if constexpr (requires (Weight a, Weight b) { a < b; a -= b; })
 		{
 			if (Weight{} + Weight{} != Weight{})
