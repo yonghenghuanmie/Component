@@ -27,5 +27,9 @@ int main()
 	std::visit(Dispatcher{}, TypeCast::InstanceOf<Derived4*, Derived3*, Derived2*, Derived1*>((Base*)&derived4));
 	std::visit(Dispatcher{}, TypeCast::InstanceOf<Derived1*, Derived2*, Derived3*, Derived4*>(&base));
 	std::visit(Dispatcher{}, TypeCast::InstanceOf<>((Base*)&derived4));
+
+	// Leaf class in inherit tree.
+	static_assert(std::is_same_v<std::tuple<Derived2*, Derived4*>, decltype(TypeCast::GetLeaf<Derived1*, Derived2*, Derived3*, Derived4*>())>);
+	std::visit(Dispatcher{}, TypeCast::InstanceOf((Base*)&derived4, TypeCast::GetLeaf<Derived1*, Derived2*, Derived3*, Derived4*>()));
 	return 0;
 }
