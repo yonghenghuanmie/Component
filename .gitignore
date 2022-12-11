@@ -38,8 +38,8 @@ x64
 Debug
 Release
 out
+CMakeSettings.json
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
 *.sln
-*.CMakeSettings.json
