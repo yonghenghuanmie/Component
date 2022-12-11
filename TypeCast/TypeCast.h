@@ -12,7 +12,7 @@ namespace TypeCast
 		{
 			auto pointer = dynamic_cast<First>(value);
 			if (pointer)
-				result.emplace<First>(pointer);
+				result.template emplace<First>(pointer);
 			else
 				InstanceOf<Rest...>(result, value);
 		}
@@ -25,6 +25,9 @@ namespace TypeCast
 		{
 			using type = std::tuple<Rest..., Type>;
 		};
+
+		template<int begin1, int begin2, typename... Rest>
+		auto GetLeafLayer2(const std::tuple<Rest...>& tuple);
 
 		template<int begin, typename... Rest, typename T>
 		auto GetLeafLayer1(T&& result)
@@ -68,7 +71,7 @@ namespace TypeCast
 		requires (std::is_pointer_v<Rest>&&...)
 	auto GetLeaf()
 	{
-		return Detail::GetLeafLayer1<0, Rest...>(std::tuple<>{});
+		return Detail::GetLeafLayer1<0, Rest...>(std::tuple<>());
 	}
 
 	template<typename... Rest, typename This>
