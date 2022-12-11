@@ -42,3 +42,4 @@ out
 *.vcxproj.filters
 *.vcxproj.user
 *.sln
+*.CMakeSettings.json
