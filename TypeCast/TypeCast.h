@@ -71,7 +71,7 @@ namespace TypeCast
 		requires (std::is_pointer_v<Rest>&&...)
 	auto GetLeaf()
 	{
-		return Detail::GetLeafLayer1<0, Rest...>(std::tuple<>());
+		return Detail::GetLeafLayer1<0, Rest...>(std::tuple<>{});
 	}
 
 	template<typename... Rest, typename This>
